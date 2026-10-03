@@ -1,0 +1,51 @@
+{
+  "name": "tally-ai-agent",
+  "version": "0.1.0",
+  "description": "Local conversational AI agent for TallyPrime — Phase 1: read-only Tally foundation",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\"",
+    "check": "node scripts/check.js",
+    "verify": "node scripts/verify-writes.js",
+    "chat": "node scripts/chat.js",
+    "start": "node scripts/serve.js",
+    "models": "node scripts/models.js",
+    "smoke": "node scripts/smoke-agent.js",
+    "docs": "node scripts/docs.js",
+    "samples": "node scripts/make-sample-invoice.js",
+    "setup-masters": "node scripts/setup-gst-masters.js",
+    "doctor": "node scripts/doctor.js",
+    "token": "node scripts/token.js",
+    "recover": "node scripts/recover.js",
+    "backup": "node scripts/backup.js",
+    "bench": "node scripts/bench.js",
+    "acceptance": "node scripts/acceptance.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "type": "module",
+  "private": "true",
+  "dependencies": {
+    "dotenv": "^18.0.2",
+    "express": "^5.2.1",
+    "fast-xml-parser": "^5.11.1",
+    "multer": "^2.4.0",
+    "openai": "^7.21.0",
+    "pdfkit": "^0.20.2",
+    "zod": "^4.6.5"
+  },
+  "bin": {
+    "tally-agent": "bin/tally-agent.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "src",
+    "scripts",
+    "bin",
+    "README.md",
+    ".env.example"
+  ]
+}

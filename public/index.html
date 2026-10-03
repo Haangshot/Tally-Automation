@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en" data-mode="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TallyPrime AI Agent</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- =============================================================== nav -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="brand">
+        <span class="mark">T</span>
+        <span class="brand-text">TallyPrime <b>AI</b></span>
+      </div>
+      <button class="icon-btn sidebar-collapse" id="sidebar-toggle" title="Collapse the sidebar">&#9776;</button>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-group">
+        <button class="nav-item" data-view="dashboard">
+          <span class="ico">&#9638;</span><span class="lbl">Dashboard</span>
+        </button>
+        <button class="nav-item active" data-view="chat">
+          <span class="ico">&#9679;</span><span class="lbl">Chat</span>
+        </button>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-title">Work</div>
+        <button class="nav-item" data-view="approvals">
+          <span class="ico">&#10003;</span><span class="lbl">Approvals</span>
+          <span class="badge hidden" id="badge-approvals">0</span>
+        </button>
+        <button class="nav-item" data-view="invoices">
+          <span class="ico">&#9636;</span><span class="lbl">Invoices</span>
+          <span class="badge hidden" id="badge-invoices">0</span>
+        </button>
+        <button class="nav-item" data-view="archive">
+          <span class="ico">&#9723;</span><span class="lbl">Archive</span>
+        </button>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-title">Record</div>
+        <button class="nav-item" data-view="history">
+          <span class="ico">&#8635;</span><span class="lbl">History</span>
+        </button>
+        <button class="nav-item" data-view="settings">
+          <span class="ico">&#9881;</span><span class="lbl">Settings</span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="sidebar-foot">
+      <button class="conn" id="conn" title="Connection to TallyPrime">
+        <span class="dot" id="tally-dot"></span>
+        <span class="conn-text">
+          <b id="tally-state">checking…</b>
+          <span id="company-name">—</span>
+        </span>
+      </button>
+      <div class="foot-row">
+        <button class="who-chip" id="who-chip" title="Who approvals are recorded as">
+          <span class="avatar" id="who-initials">?</span>
+          <span class="lbl" id="who-name">Set approver</span>
+        </button>
+        <button class="icon-btn" id="mode-toggle" title="Light or dark">&#9681;</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================================================== main -->
+  <main class="content">
+
+    <div class="banner hidden" id="banner"></div>
+
+    <!-- ------------------------------------------------------- dashboard -->
+    <section class="view" id="view-dashboard">
+      <header class="view-head">
+        <div>
+          <h1>Dashboard</h1>
+          <p class="sub" id="dash-sub">Everything in flight, and everything that reached Tally.</p>
+        </div>
+        <button class="btn ghost" id="dash-refresh">Refresh</button>
+      </header>
+
+      <div class="view-body">
+        <div class="stat-row" id="dash-stats"></div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head">
+              <h2>Waiting for you</h2>
+              <button class="btn ghost tiny" data-goto="approvals">Open approvals</button>
+            </div>
+            <div class="card-body" id="dash-awaiting"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2>Needs attention</h2>
+            </div>
+            <div class="card-body" id="dash-attention"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Recently posted to Tally</h2>
+            <button class="btn ghost tiny" data-goto="history">Full history</button>
+          </div>
+          <div class="card-body" id="dash-posted"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Connection</h2>
+            <button class="btn ghost tiny" id="dash-doctor">Run checks</button>
+          </div>
+          <div class="card-body" id="dash-tally"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------ chat -->
+    <section class="view active" id="view-chat">
+      <header class="view-head">
+        <div>
+          <h1>Chat</h1>
+          <p class="sub">Ask about the books, or describe an entry to prepare.</p>
+        </div>
+        <button class="btn ghost" id="chat-clear">New chat</button>
+      </header>
+
+      <div class="chat-scroll" id="chat-log">
+        <div class="chat-intro" id="chat-intro">
+          <h2>What would you like to look at?</h2>
+          <p>I can read anything in this company and prepare entries, but I cannot post.
+             Everything I prepare waits under <b>Approvals</b>,
+             and nothing reaches Tally until you approve it there.</p>
+          <div class="suggestions">
+            <button class="suggest" data-ask="Show me every purchase invoice this month as a table.">
+              <b>List purchases</b><span>Every purchase invoice this month</span></button>
+            <button class="suggest" data-ask="What is outstanding from my customers? Show it as a table with the oldest first.">
+              <b>Outstanding receivables</b><span>Who owes what, oldest first</span></button>
+            <button class="suggest" data-ask="Show me the trial balance as of today.">
+              <b>Trial balance</b><span>Where the books stand today</span></button>
+            <button class="suggest" data-ask="Pay ABC Traders 25,000 from HDFC today.">
+              <b>Prepare a payment</b><span>Staged for your approval</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="composer-wrap">
+        <div class="composer">
+          <textarea id="chat-input" rows="1"
+            placeholder="Ask about your books, or describe an entry…"></textarea>
+          <button class="send-btn" id="send" title="Send">&#10148;</button>
+        </div>
+        <div class="composer-hint">Enter to send · Shift+Enter for a new line · nothing posts without your approval</div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------- approvals -->
+    <section class="view" id="view-approvals">
+      <header class="view-head">
+        <div>
+          <h1>Approvals</h1>
+          <p class="sub">Nothing here has reached Tally. Approving posts it.</p>
+        </div>
+        <div class="head-actions">
+          <label class="check"><input type="checkbox" id="select-all"> Select all</label>
+          <button class="btn" id="approve-selected" disabled>Approve 0</button>
+          <button class="btn ghost" id="queue-refresh">Refresh</button>
+        </div>
+      </header>
+
+      <div class="view-body">
+        <div class="filters" id="queue-filters">
+          <button class="chip active" data-filter="open">Open</button>
+          <button class="chip" data-filter="pending_approval">Pending</button>
+          <button class="chip" data-filter="draft">Drafts</button>
+          <button class="chip" data-filter="failed">Failed</button>
+          <button class="chip" data-filter="verified">Posted</button>
+          <button class="chip" data-filter="rejected">Rejected</button>
+          <button class="chip" data-filter="all">All</button>
+          <span class="spacer"></span>
+          <button class="btn ghost tiny" id="purge-rejected">Delete all rejected</button>
+        </div>
+        <div class="queue" id="queue"></div>
+      </div>
+    </section>
+
+    <!-- -------------------------------------------------------- invoices -->
+    <section class="view" id="view-invoices">
+      <header class="view-head">
+        <div>
+          <h1>Invoices</h1>
+          <p class="sub">Drop a bill in. It is read, checked, then waits for approval.</p>
+        </div>
+        <button class="btn ghost" id="invoice-refresh">Refresh</button>
+      </header>
+
+      <div class="view-body">
+        <div class="dropzone" id="dropzone">
+          <div class="dz-icon">&#8679;</div>
+          <b>Drop invoices here, or click to choose</b>
+          <span>PDF, PNG, JPG, WEBP or GIF · up to 20 files · 20&nbsp;MB each</span>
+          <input type="file" id="file-input" multiple hidden
+                 accept=".pdf,.png,.jpg,.jpeg,.webp,.gif">
+        </div>
+        <div class="doc-list" id="doc-list"></div>
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------- archive -->
+    <section class="view" id="view-archive">
+      <header class="view-head">
+        <div>
+          <h1>Archive</h1>
+          <p class="sub">Hidden from the queue. Still on record, so nothing can post twice.</p>
+        </div>
+        <div class="head-actions">
+          <button class="btn ghost" id="purge-archived">Delete the safe ones</button>
+          <button class="btn ghost" id="archive-refresh">Refresh</button>
+        </div>
+      </header>
+      <div class="view-body">
+        <div class="queue" id="archive-list"></div>
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------- history -->
+    <section class="view" id="view-history">
+      <header class="view-head">
+        <div>
+          <h1>History</h1>
+          <p class="sub" id="audit-count">Append-only. Every approval, rejection and post.</p>
+        </div>
+        <button class="btn ghost" id="audit-refresh">Refresh</button>
+      </header>
+      <div class="view-body">
+        <div class="card flush">
+          <table class="data-table">
+            <thead><tr><th>Time</th><th>Event</th><th>State</th><th>By</th><th>Action</th></tr></thead>
+            <tbody id="audit-rows"></tbody>
+          </table>
+          <div class="empty" id="audit-empty">Nothing recorded yet.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- -------------------------------------------------------- settings -->
+    <section class="view" id="view-settings">
+      <header class="view-head">
+        <div>
+          <h1>Settings</h1>
+          <p class="sub">Applies to this running server. Edit <code>.env</code> to make it permanent.</p>
+        </div>
+      </header>
+
+      <div class="view-body">
+        <div class="card">
+          <div class="card-head"><h2>Approvals</h2></div>
+          <div class="card-body">
+            <div class="field">
+              <label for="set-approver">Approver</label>
+              <input id="set-approver" type="text" placeholder="your name or email">
+            </div>
+            <p class="hint">Recorded against every approval and rejection. Stored in this browser only.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>Model</h2></div>
+          <div class="card-body">
+            <div class="field">
+              <label for="set-model">Model</label>
+              <input id="set-model" type="text" placeholder="gpt-5.6-sol">
+            </div>
+            <div class="field">
+              <label for="set-effort">Reasoning effort</label>
+              <select id="set-effort">
+                <option value="low">low</option>
+                <option value="medium">medium</option>
+                <option value="high">high</option>
+              </select>
+            </div>
+            <p class="hint">The OpenAI API key is never shown here and can only be set in <code>.env</code>.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>TallyPrime</h2></div>
+          <div class="card-body">
+            <div class="field">
+              <label for="set-url">Tally URL</label>
+              <input id="set-url" type="text" placeholder="http://127.0.0.1:9000">
+            </div>
+            <div class="field">
+              <label for="set-company">Company</label>
+              <select id="set-company"></select>
+            </div>
+            <div class="field">
+              <label for="set-gstin">Company GSTIN</label>
+              <input id="set-gstin" type="text" placeholder="27AABCT1332L1ZE">
+            </div>
+            <p class="hint">The GSTIN decides whether an uploaded invoice is a purchase or a sale.</p>
+            <div class="field">
+              <label></label>
+              <div class="row-btns">
+                <button class="btn primary" id="settings-save">Apply</button>
+                <button class="btn ghost" id="settings-reload">Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Diagnostics</h2>
+            <button class="btn ghost tiny" id="run-doctor">Run checks</button>
+          </div>
+          <div class="card-body" id="doctor-output">
+            <p class="hint">Checks Tally, the company, the books period and the model configuration.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Dialogs are built here: duplicates, the approver's name, confirmations. -->
+<div class="scrim hidden" id="scrim"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>
