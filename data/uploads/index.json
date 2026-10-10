@@ -1,0 +1,243 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "hash": "2f5827a387b5033153737f55fcd6f48dacb8a6fc6ea9a0cf023ad0c3b54aa231",
+      "filename": "sample-sales-intrastate.pdf",
+      "originalName": "sample-sales-intrastate.pdf",
+      "path": "C:\\Users\\DELL\\OneDrive\\Desktop\\Tally_Automation\\data\\uploads\\2026\\2f5827a387b5-sample-sales-intrastate.pdf",
+      "relativePath": "data\\uploads\\2026\\2f5827a387b5-sample-sales-intrastate.pdf",
+      "bytes": 2209,
+      "storedAt": "2026-09-22T13:46:38.957Z",
+      "uploads": [
+        {
+          "at": "2026-09-22T13:46:47.771Z",
+          "documentId": "doc_9ee5928e836b",
+          "actionId": "act_75778415-0f38-47cf-ade4-a70778535441",
+          "invoiceNumber": "CPL/2026/42779-1",
+          "party": "Sahyadri Retail LLP",
+          "documentType": "sales",
+          "stage": "pending_approval",
+          "outcome": null
+        },
+        {
+          "at": "2026-09-22T13:47:13.384Z",
+          "documentId": "doc_fd215264946c",
+          "actionId": "act_910b5947-ab77-41d7-913d-024b2908ff02",
+          "invoiceNumber": "CPL/2026/42779-1",
+          "party": "Sahyadri Retail LLP",
+          "documentType": "sales",
+          "stage": "pending_approval",
+          "outcome": null
+        },
+        {
+          "at": "2026-09-22T13:51:26.720Z",
+          "documentId": "doc_9fcfeda52ceb",
+          "actionId": "act_deea538f-8109-4121-b0d5-d777d150e392",
+          "invoiceNumber": "CPL/2026/42779-1",
+          "party": "Sahyadri Retail LLP",
+          "documentType": "sales",
+          "stage": "pending_approval",
+          "outcome": null
+        }
+      ]
+    },
+    {
+      "hash": "74e62b6fa66a2bc690c35198afe0a0a5ef29480d5aa31f503b4eed7cb08e471e",
+      "filename": "sample-purchase-intrastate.pdf",
+      "originalName": "sample-purchase-intrastate.pdf",
+      "path": "C:\\Users\\DELL\\OneDrive\\Desktop\\Tally_Automation\\data\\uploads\\2026\\74e62b6fa66a-sample-purchase-intrastate.pdf",
+      "relativePath": "data\\uploads\\2026\\74e62b6fa66a-sample-purchase-intrastate.pdf",
+      "bytes": 2189,
+      "storedAt": "2026-09-22T14:01:34.594Z",
+      "uploads": [
+        {
+          "at": "2026-09-22T14:01:42.267Z",
+          "documentId": "doc_a856496506f0",
+          "actionId": "act_e27cfdb8-db93-46f4-adc7-075754d6820c",
+          "invoiceNumber": "RCS/2026/42779",
+          "party": "Rushabh Office Supplies Pvt Ltd",
+          "documentType": "purchase",
+          "stage": "exceptions",
+          "outcome": null
+        }
+      ]
+    },
+    {
+      "hash": "2bbaf3220ac09bf546158dceac9817474a77129a0fcdf271b747b431d6669cbd",
+      "filename": "sample-sales-roundoff.pdf",
+      "originalName": "sample-sales-roundoff.pdf",
+      "path": "C:\\Users\\DELL\\OneDrive\\Desktop\\Tally_Automation\\data\\uploads\\2026\\2bbaf3220ac0-sample-sales-roundoff.pdf",
+      "relativePath": "data\\uploads\\2026\\2bbaf3220ac0-sample-sales-roundoff.pdf",
+      "bytes": 2200,
+      "storedAt": "2026-09-22T14:16:09.662Z",
+      "uploads": [
+        {
+          "at": "2026-09-22T14:16:18.728Z",
+          "documentId": "doc_709ecd9fd019",
+          "actionId": "act_9345e7d9-c83d-4056-b2de-e0488e8087b0",
+          "invoiceNumber": "CPL/2026/53512-3",
+          "party": "Pashan Systems Pvt Ltd",
+          "documentType": "sales",
+          "stage": "pending_approval",
+          "outcome": null
+        }
+      ]
+    },
+    {
+      "hash": "d637dcd0ac2ea16909cb25882eb54aee35d77ffa8a295491dfc4e32b09f162ee",
+      "filename": "sample-sales-interstate.pdf",
+      "originalName": "sample-sales-interstate.pdf",
+      "path": "C:\\Users\\DELL\\OneDrive\\Desktop\\Tally_Automation\\data\\uploads\\2026\\d637dcd0ac2e-sample-sales-interstate.pdf",
+      "relativePath": "data\\uploads\\2026\\d637dcd0ac2e-sample-sales-interstate.pdf",
+      "bytes": 2137,
+      "storedAt": "2026-09-22T14:17:16.114Z",
+      "uploads": [
+        {
+          "at": "2026-09-22T14:17:21.719Z",
+          "documentId": "doc_9b06fc93b496",
+          "actionId": "act_c7751fb5-bd51-4730-8eed-f8246e896f39",
+          "invoiceNumber": "CPL/2026/53512-2",
+          "party": "Delhi Office Works Pvt Ltd",
+          "documentType": "sales",
+          "stage": "pending_approval",
+          "outcome": null
+        },
+        {
+          "at": "2026-09-23T07:13:07.288Z",
+          "documentId": "doc_85d40452151f",
+          "actionId": "act_ea311544-23d2-45db-ad79-1006e631ca4a",
+          "invoiceNumber": "CPL/2026/53512-2",
+          "party": "Delhi Office Works Pvt Ltd",
+          "documentType": "sales",
+          "stage": "pending_approval",
+          "outcome": null
+        }
+      ]
+    },
+    {
+      "hash": "b95797ee7b958906e93343df889a57faa3726b9535c26c5b648ee3e23d578aa0",
+      "filename": "sample-sales-intrastate.pdf",
+      "originalName": "sample-sales-intrastate.pdf",
+      "path": "C:\\Users\\DELL\\OneDrive\\Desktop\\Tally_Automation\\data\\uploads\\2026\\b95797ee7b95-sample-sales-intrastate.pdf",
+      "relativePath": "data\\uploads\\2026\\b95797ee7b95-sample-sales-intrastate.pdf",
+      "bytes": 2209,
+      "storedAt": "2026-09-22T14:18:03.010Z",
+      "uploads": [
+        {
+          "at": "2026-09-22T14:18:09.451Z",
+          "documentId": "doc_e1dbdd9e87c7",
+          "actionId": "act_c53e7a1e-7ff4-47bf-812e-c502b4838098",
+          "invoiceNumber": "CPL/2026/53512-1",
+          "party": "Sahyadri Retail LLP",
+          "documentType": "sales",
+          "stage": "pending_approval",
+          "outcome": null
+        },
+        {
+          "at": "2026-10-05T07:56:22.151Z",
+          "documentId": "doc_f168ba5b7dee",
+          "actionId": "act_96f73b84-f75e-42e8-a44c-745484ab753e",
+          "invoiceNumber": "CPL/2026/53512-1",
+          "party": "Sahyadri Retail LLP",
+          "documentType": "sales",
+          "stage": "pending_approval",
+          "outcome": null
+        }
+      ]
+    },
+    {
+      "hash": "14d493a6cc17ca95d6879a67b080fc8b5c37af17cf33a1af74a7af1aa031c5c0",
+      "filename": "sample-purchase-intrastate.pdf",
+      "originalName": "sample-purchase-intrastate.pdf",
+      "path": "C:\\Users\\DELL\\OneDrive\\Desktop\\Tally_Automation\\data\\uploads\\2026\\14d493a6cc17-sample-purchase-intrastate.pdf",
+      "relativePath": "data\\uploads\\2026\\14d493a6cc17-sample-purchase-intrastate.pdf",
+      "bytes": 2189,
+      "storedAt": "2026-09-22T14:22:22.201Z",
+      "uploads": [
+        {
+          "at": "2026-09-22T14:22:29.916Z",
+          "documentId": "doc_1c6b46ad0e01",
+          "actionId": "act_c71f958b-a897-406a-aa1a-39d7e3efd4b0",
+          "invoiceNumber": "RCS/2026/53512",
+          "party": "Rushabh Office Supplies Pvt Ltd",
+          "documentType": "purchase",
+          "stage": "pending_approval",
+          "outcome": null
+        },
+        {
+          "at": "2026-09-22T14:24:35.602Z",
+          "documentId": "doc_3794b695bebb",
+          "actionId": "act_d1ac463d-8db8-47f9-8665-070b34cb58d2",
+          "invoiceNumber": "RCS/2026/53512",
+          "party": "Rushabh Office Supplies Pvt Ltd",
+          "documentType": "purchase",
+          "stage": "pending_approval",
+          "outcome": null
+        },
+        {
+          "at": "2026-09-24T05:52:58.455Z",
+          "documentId": "doc_62127ae3883f",
+          "actionId": "act_2452ae9a-5e7c-4505-b3df-e6ac4418d95c",
+          "invoiceNumber": "RCS/2026/53512",
+          "party": "Rushabh Office Supplies Pvt Ltd",
+          "documentType": "purchase",
+          "stage": "pending_approval",
+          "outcome": null
+        },
+        {
+          "at": "2026-09-24T08:38:11.090Z",
+          "documentId": "doc_7112394094e1",
+          "actionId": "act_3361d392-74c2-4ee9-ad15-b27433df99a3",
+          "invoiceNumber": "RCS/2026/53512",
+          "party": "Rushabh Office Supplies Pvt Ltd",
+          "documentType": "purchase",
+          "stage": "pending_approval",
+          "outcome": null
+        }
+      ]
+    },
+    {
+      "hash": "26394e762c5912279c001696c0ba0247d42b2fa480ed899cdcb5000098c2379a",
+      "filename": "sample-purchase-interstate.pdf",
+      "originalName": "sample-purchase-interstate.pdf",
+      "path": "C:\\Users\\DELL\\OneDrive\\Desktop\\Tally_Automation\\data\\uploads\\2026\\26394e762c59-sample-purchase-interstate.pdf",
+      "relativePath": "data\\uploads\\2026\\26394e762c59-sample-purchase-interstate.pdf",
+      "bytes": 2124,
+      "storedAt": "2026-09-22T18:03:54.142Z",
+      "uploads": [
+        {
+          "at": "2026-09-22T18:03:58.423Z",
+          "documentId": "doc_4db980388542",
+          "actionId": "act_6613300f-c37c-4284-9592-b76970b57ca3",
+          "invoiceNumber": "KCL-2026-53512",
+          "party": "Karnataka Components Ltd",
+          "documentType": "purchase",
+          "stage": "pending_approval",
+          "outcome": null
+        }
+      ]
+    },
+    {
+      "hash": "8d8b33968f209f2f0b2698a4e9fd7206bc06d4357e478a548550b2fa5d74185e",
+      "filename": "ABC_Engineering_Tally_Practice_Scenario.pdf",
+      "originalName": "ABC_Engineering_Tally_Practice_Scenario.pdf",
+      "path": "C:\\Users\\DELL\\OneDrive\\Desktop\\Tally_Automation\\data\\uploads\\2026\\8d8b33968f20-ABC_Engineering_Tally_Practice_Scenario.pdf",
+      "relativePath": "data\\uploads\\2026\\8d8b33968f20-ABC_Engineering_Tally_Practice_Scenario.pdf",
+      "bytes": 30890,
+      "storedAt": "2026-10-03T11:45:59.015Z",
+      "uploads": [
+        {
+          "at": "2026-10-03T11:46:03.871Z",
+          "documentId": "doc_d8b62d47a3a1",
+          "actionId": null,
+          "invoiceNumber": null,
+          "party": null,
+          "documentType": null,
+          "stage": "exceptions",
+          "outcome": null
+        }
+      ]
+    }
+  ]
+}

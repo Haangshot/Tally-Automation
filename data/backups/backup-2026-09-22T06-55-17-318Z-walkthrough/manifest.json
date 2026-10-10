@@ -1,0 +1,17 @@
+{
+  "createdAt": "2026-09-22T06:55:17.318Z",
+  "label": "walkthrough",
+  "dataDir": "C:\\Users\\DELL\\OneDrive\\Desktop\\Tally_Automation\\data",
+  "files": [
+    {
+      "name": "actions.json",
+      "bytes": 26476,
+      "sha256": "73613415177b8bf8e9fee618c81b7b1ba8ae4ad0a9cd08c6ce967979592da231"
+    },
+    {
+      "name": "audit.jsonl",
+      "bytes": 26676,
+      "sha256": "316ba9040e51354c554dbd4ce18fa0fd044a182afb95e61390bd0979107ab5c5"
+    }
+  ]
+}

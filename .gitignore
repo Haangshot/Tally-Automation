@@ -1,6 +1,5 @@
 node_modules/
 .env
 *.log
-data/
+*.tmp
 coverage/
-samples/

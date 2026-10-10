@@ -1,0 +1,764 @@
+[
+  {
+    "id": "act_7fcc281b-b076-4299-9b49-b218ba0c49de",
+    "kind": "accounting_voucher",
+    "company": "Tally_Aut",
+    "state": "verified",
+    "payload": {
+      "voucherType": "Purchase",
+      "date": "2026-04-01",
+      "entries": [
+        {
+          "ledger": "Purchase",
+          "type": "debit",
+          "amount": 80000
+        },
+        {
+          "ledger": "Input CGST",
+          "type": "debit",
+          "amount": 7200
+        },
+        {
+          "ledger": "Input SGST",
+          "type": "debit",
+          "amount": 7200
+        },
+        {
+          "ledger": "Rushabh Creatify Supplies Pvt Ltd",
+          "type": "credit",
+          "amount": 94400
+        }
+      ],
+      "party": "Rushabh Creatify Supplies Pvt Ltd",
+      "referenceNumber": "RCS/2026/0417",
+      "referenceDate": "2026-04-01",
+      "narration": "Purchase RCS/2026/0417 from Rushabh Creatify Supplies Pvt Ltd (intra-state)"
+    },
+    "payloadHash": "d338a113291aba2200cb0dddfa2d00197ad90d001e7c51e00f029a44065e3aa3",
+    "preview": {
+      "title": "Purchase voucher dated 2026-04-01",
+      "company": "Tally_Aut",
+      "voucherType": "Purchase",
+      "date": "2026-04-01",
+      "party": "Rushabh Creatify Supplies Pvt Ltd",
+      "reference": "RCS/2026/0417",
+      "narration": "Purchase RCS/2026/0417 from Rushabh Creatify Supplies Pvt Ltd (intra-state)",
+      "entries": [
+        {
+          "ledger": "Purchase",
+          "debit": "80000.00",
+          "credit": ""
+        },
+        {
+          "ledger": "Input CGST",
+          "debit": "7200.00",
+          "credit": ""
+        },
+        {
+          "ledger": "Input SGST",
+          "debit": "7200.00",
+          "credit": ""
+        },
+        {
+          "ledger": "Rushabh Creatify Supplies Pvt Ltd",
+          "debit": "",
+          "credit": "94400.00"
+        }
+      ],
+      "totals": {
+        "debit": "94400.00",
+        "credit": "94400.00",
+        "balanced": true
+      },
+      "warnings": [],
+      "errors": []
+    },
+    "errors": [],
+    "warnings": [],
+    "createdAt": "2026-09-22T06:25:45.516Z",
+    "updatedAt": "2026-09-22T06:26:01.337Z",
+    "attempts": 1,
+    "history": [
+      {
+        "at": "2026-09-22T06:25:45.516Z",
+        "to": "pending_approval",
+        "by": "system",
+        "note": "staged"
+      },
+      {
+        "at": "2026-09-22T06:26:00.875Z",
+        "from": "pending_approval",
+        "to": "executing",
+        "by": "aniket@letstuteai.in",
+        "note": "approved"
+      },
+      {
+        "at": "2026-09-22T06:26:01.337Z",
+        "from": "executing",
+        "to": "verified",
+        "by": "aniket@letstuteai.in",
+        "note": "verified against Tally"
+      }
+    ],
+    "approval": {
+      "by": "aniket@letstuteai.in",
+      "at": "2026-09-22T06:26:00.875Z"
+    },
+    "execution": {
+      "startedAt": "2026-09-22T06:26:01.063Z",
+      "finishedAt": "2026-09-22T06:26:01.336Z",
+      "posted": true,
+      "importResult": {
+        "created": 1,
+        "altered": 0,
+        "ignored": 0,
+        "errors": 0,
+        "cancelled": 0,
+        "deleted": 0,
+        "combined": 0,
+        "exceptions": 0,
+        "lastVoucherId": "10",
+        "lastMasterId": "0",
+        "raw": "<ENVELOPE>\r\n <HEADER>\r\n  <VERSION>1</VERSION>\r\n  <STATUS>1</STATUS>\r\n </HEADER>\r\n <BODY>\r\n  <DATA>\r\n   <IMPORTRESULT>\r\n    <CREATED>1</CREATED>\r\n    <ALTERED>0</ALTERED>\r\n    <DELETED>0</DELETED>\r\n    <LASTVCHID>10</LASTVCHID>\r\n    <LASTMID>0</LASTMID>\r\n    <COMBINED>0</COMBINED>\r\n    <IGNORED>0</IGNORED>\r\n    <ERRORS>0</ERRORS>\r\n    <CANCELLED>0</CANCELLED>\r\n    <EXCEPTIONS>0</EXCEPTIONS>\r\n   </IMPORTRESULT>\r\n  </DATA>\r\n  <DESC>\r\n   <CMPINFO>\r\n    <COMPANY>0</COMPANY>\r\n    <GROUP>0</GROUP>\r\n    <LEDGER>60</LEDGER>\r\n    <COSTCATEGORY>0</COSTCATEGORY>\r\n    <COSTCENTRE>0</COSTCENTRE>\r\n    <GODOWN>0</GODOWN>\r\n    <STOCKGROUP>0</STOCKGROUP>\r\n    <STOCKCATEGORY>0</STOCKCATEGORY>\r\n    <STOCKITEM>0</STOCKITEM>\r\n    <VOUCHERTYPE>0</VOUCHERTYPE>\r\n    <CURRENCY>10</CURRENCY>\r\n    <UNIT>0</UNIT>\r\n    <BUDGET>0</BUDGET>\r\n    <CLIENTRULE>0</CLIENTRULE>\r\n    <SERVERRULE>0</SERVERRULE>\r\n    <STATE>0</STATE>\r\n    <TDSRATE>0</TDSRATE>\r\n    <TAXCLASSIFICATION>0</TAXCLASSIFICATION>\r\n    <STCATEGORY>0</STCATEGORY>\r\n    <DEDUCTEETYPE>0</DEDUCTEETYPE>\r\n    <ATTENDANCETYPE>0</ATTENDANCETYPE>\r\n    <FBTCATEGORY>0</FBTCATEGORY>\r\n    <FBTASSESSEETYPE>0</FBTASSESSEETYPE>\r\n    <TARIFFCLASSIFICATION>0</TARIFFCLASSIFICATION>\r\n    <EXCISEDUTYCLASSIFICATION>0</EXCISEDUTYCLASSIFICATION>\r\n    <SERIALNUMBER>0</SERIALNUMBER>\r\n    <ADJUSTMENTCLASSIFICATION>0</ADJUSTMENTCLASSIFICATION>\r\n    <INCOMETAXSLAB>0</INCOMETAXSLAB>\r\n    <INCOMETAXCLASSIFICATION>0</INCOMETAXCLASSIFICATION>\r\n    <LBTCLASSIFICATION>0</LBTCLASSIFICATION>\r\n    <TAXUNIT>17</TAXUNIT>\r\n    <RETURNMASTER>0</RETURNMASTER>\r\n    <GSTCLASSIFICATION>0</GSTCLASSIFICATION>\r\n    <VOUCHERNUMBERSERIES>17</VOUCHERNUMBERSERIES>\r\n    <VOUCHER>17</VOUCHER>\r\n   </CMPINFO>\r\n   <CMPINFOEX>\r\n    <IDINFO>\r\n     <LASTCREATEDVCHID>10</LASTCREATEDVCHID>\r\n    </IDINFO>\r\n   </CMPINFOEX>\r\n   <MSTALTIDINFO>\r\n    <EXPSUMID>0</EXPSUMID>\r\n   </MSTALTIDINFO>\r\n  </DESC>\r\n </BODY>\r\n</ENVELOPE>\r\n",
+        "ok": true,
+        "problems": []
+      }
+    },
+    "verification": {
+      "verified": true,
+      "at": "2026-09-22T06:26:01.212Z",
+      "method": "voucher-read-back",
+      "masterId": "10",
+      "voucherNumber": "3",
+      "voucher": {
+        "masterId": "10",
+        "voucherKey": "01b3d0b2-e9e2-4548-8152-093e570aef41-0000000a",
+        "date": "2026-04-01",
+        "voucherType": "Purchase",
+        "voucherNumber": "3",
+        "party": "Rushabh Creatify Supplies Pvt Ltd",
+        "reference": "RCS/2026/0417",
+        "narration": "Purchase RCS/2026/0417 from Rushabh Creatify Supplies Pvt Ltd (intra-state)",
+        "isCancelled": false,
+        "isOptional": false,
+        "entries": [
+          {
+            "ledger": "Purchase",
+            "amount": 80000,
+            "type": "debit",
+            "rawAmount": -80000
+          },
+          {
+            "ledger": "Input CGST",
+            "amount": 7200,
+            "type": "debit",
+            "rawAmount": -7200
+          },
+          {
+            "ledger": "Input SGST",
+            "amount": 7200,
+            "type": "debit",
+            "rawAmount": -7200
+          },
+          {
+            "ledger": "Rushabh Creatify Supplies Pvt Ltd",
+            "amount": 94400,
+            "type": "credit",
+            "rawAmount": 94400
+          }
+        ],
+        "totals": {
+          "debit": 94400,
+          "credit": 94400,
+          "balanced": true
+        }
+      }
+    }
+  },
+  {
+    "id": "act_64ddbe28-2586-4af2-a2ca-a9f937a79ad0",
+    "kind": "accounting_voucher",
+    "company": "Tally_Aut",
+    "state": "verified",
+    "payload": {
+      "voucherType": "Purchase",
+      "date": "2026-04-02",
+      "entries": [
+        {
+          "ledger": "Purchase",
+          "type": "debit",
+          "amount": 50000
+        },
+        {
+          "ledger": "Input IGST",
+          "type": "debit",
+          "amount": 9000
+        },
+        {
+          "ledger": "Karnataka Components Ltd",
+          "type": "credit",
+          "amount": 59000
+        }
+      ],
+      "party": "Karnataka Components Ltd",
+      "referenceNumber": "KCL-2026-8831",
+      "referenceDate": "2026-04-02",
+      "narration": "Purchase KCL-2026-8831 from Karnataka Components Ltd (inter-state)"
+    },
+    "payloadHash": "129302bc86706b65b0861a223aeece017b1849364e1ff7edb29907ba88730dfe",
+    "preview": {
+      "title": "Purchase voucher dated 2026-04-02",
+      "company": "Tally_Aut",
+      "voucherType": "Purchase",
+      "date": "2026-04-02",
+      "party": "Karnataka Components Ltd",
+      "reference": "KCL-2026-8831",
+      "narration": "Purchase KCL-2026-8831 from Karnataka Components Ltd (inter-state)",
+      "entries": [
+        {
+          "ledger": "Purchase",
+          "debit": "50000.00",
+          "credit": ""
+        },
+        {
+          "ledger": "Input IGST",
+          "debit": "9000.00",
+          "credit": ""
+        },
+        {
+          "ledger": "Karnataka Components Ltd",
+          "debit": "",
+          "credit": "59000.00"
+        }
+      ],
+      "totals": {
+        "debit": "59000.00",
+        "credit": "59000.00",
+        "balanced": true
+      },
+      "warnings": [],
+      "errors": []
+    },
+    "errors": [],
+    "warnings": [],
+    "createdAt": "2026-09-22T06:25:50.357Z",
+    "updatedAt": "2026-09-22T06:26:00.867Z",
+    "attempts": 1,
+    "history": [
+      {
+        "at": "2026-09-22T06:25:50.357Z",
+        "to": "pending_approval",
+        "by": "system",
+        "note": "staged"
+      },
+      {
+        "at": "2026-09-22T06:26:00.364Z",
+        "from": "pending_approval",
+        "to": "executing",
+        "by": "aniket@letstuteai.in",
+        "note": "approved"
+      },
+      {
+        "at": "2026-09-22T06:26:00.867Z",
+        "from": "executing",
+        "to": "verified",
+        "by": "aniket@letstuteai.in",
+        "note": "verified against Tally"
+      }
+    ],
+    "approval": {
+      "by": "aniket@letstuteai.in",
+      "at": "2026-09-22T06:26:00.362Z"
+    },
+    "execution": {
+      "startedAt": "2026-09-22T06:26:00.588Z",
+      "finishedAt": "2026-09-22T06:26:00.867Z",
+      "posted": true,
+      "importResult": {
+        "created": 1,
+        "altered": 0,
+        "ignored": 0,
+        "errors": 0,
+        "cancelled": 0,
+        "deleted": 0,
+        "combined": 0,
+        "exceptions": 0,
+        "lastVoucherId": "9",
+        "lastMasterId": "0",
+        "raw": "<ENVELOPE>\r\n <HEADER>\r\n  <VERSION>1</VERSION>\r\n  <STATUS>1</STATUS>\r\n </HEADER>\r\n <BODY>\r\n  <DATA>\r\n   <IMPORTRESULT>\r\n    <CREATED>1</CREATED>\r\n    <ALTERED>0</ALTERED>\r\n    <DELETED>0</DELETED>\r\n    <LASTVCHID>9</LASTVCHID>\r\n    <LASTMID>0</LASTMID>\r\n    <COMBINED>0</COMBINED>\r\n    <IGNORED>0</IGNORED>\r\n    <ERRORS>0</ERRORS>\r\n    <CANCELLED>0</CANCELLED>\r\n    <EXCEPTIONS>0</EXCEPTIONS>\r\n   </IMPORTRESULT>\r\n  </DATA>\r\n  <DESC>\r\n   <CMPINFO>\r\n    <COMPANY>0</COMPANY>\r\n    <GROUP>0</GROUP>\r\n    <LEDGER>55</LEDGER>\r\n    <COSTCATEGORY>0</COSTCATEGORY>\r\n    <COSTCENTRE>0</COSTCENTRE>\r\n    <GODOWN>0</GODOWN>\r\n    <STOCKGROUP>0</STOCKGROUP>\r\n    <STOCKCATEGORY>0</STOCKCATEGORY>\r\n    <STOCKITEM>0</STOCKITEM>\r\n    <VOUCHERTYPE>0</VOUCHERTYPE>\r\n    <CURRENCY>9</CURRENCY>\r\n    <UNIT>0</UNIT>\r\n    <BUDGET>0</BUDGET>\r\n    <CLIENTRULE>0</CLIENTRULE>\r\n    <SERVERRULE>0</SERVERRULE>\r\n    <STATE>0</STATE>\r\n    <TDSRATE>0</TDSRATE>\r\n    <TAXCLASSIFICATION>0</TAXCLASSIFICATION>\r\n    <STCATEGORY>0</STCATEGORY>\r\n    <DEDUCTEETYPE>0</DEDUCTEETYPE>\r\n    <ATTENDANCETYPE>0</ATTENDANCETYPE>\r\n    <FBTCATEGORY>0</FBTCATEGORY>\r\n    <FBTASSESSEETYPE>0</FBTASSESSEETYPE>\r\n    <TARIFFCLASSIFICATION>0</TARIFFCLASSIFICATION>\r\n    <EXCISEDUTYCLASSIFICATION>0</EXCISEDUTYCLASSIFICATION>\r\n    <SERIALNUMBER>0</SERIALNUMBER>\r\n    <ADJUSTMENTCLASSIFICATION>0</ADJUSTMENTCLASSIFICATION>\r\n    <INCOMETAXSLAB>0</INCOMETAXSLAB>\r\n    <INCOMETAXCLASSIFICATION>0</INCOMETAXCLASSIFICATION>\r\n    <LBTCLASSIFICATION>0</LBTCLASSIFICATION>\r\n    <TAXUNIT>16</TAXUNIT>\r\n    <RETURNMASTER>0</RETURNMASTER>\r\n    <GSTCLASSIFICATION>0</GSTCLASSIFICATION>\r\n    <VOUCHERNUMBERSERIES>16</VOUCHERNUMBERSERIES>\r\n    <VOUCHER>15</VOUCHER>\r\n   </CMPINFO>\r\n   <CMPINFOEX>\r\n    <IDINFO>\r\n     <LASTCREATEDVCHID>9</LASTCREATEDVCHID>\r\n    </IDINFO>\r\n   </CMPINFOEX>\r\n   <MSTALTIDINFO>\r\n    <EXPSUMID>0</EXPSUMID>\r\n   </MSTALTIDINFO>\r\n  </DESC>\r\n </BODY>\r\n</ENVELOPE>\r\n",
+        "ok": true,
+        "problems": []
+      }
+    },
+    "verification": {
+      "verified": true,
+      "at": "2026-09-22T06:26:00.755Z",
+      "method": "voucher-read-back",
+      "masterId": "9",
+      "voucherNumber": "2",
+      "voucher": {
+        "masterId": "9",
+        "voucherKey": "01b3d0b2-e9e2-4548-8152-093e570aef41-00000009",
+        "date": "2026-04-02",
+        "voucherType": "Purchase",
+        "voucherNumber": "2",
+        "party": "Karnataka Components Ltd",
+        "reference": "KCL-2026-8831",
+        "narration": "Purchase KCL-2026-8831 from Karnataka Components Ltd (inter-state)",
+        "isCancelled": false,
+        "isOptional": false,
+        "entries": [
+          {
+            "ledger": "Purchase",
+            "amount": 50000,
+            "type": "debit",
+            "rawAmount": -50000
+          },
+          {
+            "ledger": "Input IGST",
+            "amount": 9000,
+            "type": "debit",
+            "rawAmount": -9000
+          },
+          {
+            "ledger": "Karnataka Components Ltd",
+            "amount": 59000,
+            "type": "credit",
+            "rawAmount": 59000
+          }
+        ],
+        "totals": {
+          "debit": 59000,
+          "credit": 59000,
+          "balanced": true
+        }
+      }
+    }
+  },
+  {
+    "id": "act_69fec4fc-e96b-4c8a-9617-a31f63470f1e",
+    "kind": "accounting_voucher",
+    "company": "Tally_Aut",
+    "state": "draft",
+    "payload": {
+      "voucherType": "Purchase",
+      "date": "2026-04-01",
+      "entries": [
+        {
+          "ledger": "Purchase",
+          "type": "debit",
+          "amount": 80000
+        },
+        {
+          "ledger": "Input CGST",
+          "type": "debit",
+          "amount": 7200
+        },
+        {
+          "ledger": "Input SGST",
+          "type": "debit",
+          "amount": 7200
+        },
+        {
+          "ledger": "Rushabh Creatify Supplies Pvt Ltd",
+          "type": "credit",
+          "amount": 94400
+        }
+      ],
+      "party": "Rushabh Creatify Supplies Pvt Ltd",
+      "referenceNumber": "RCS/2026/0417",
+      "referenceDate": "2026-04-01",
+      "narration": "Purchase RCS/2026/0417 from Rushabh Creatify Supplies Pvt Ltd (intra-state)"
+    },
+    "payloadHash": "d338a113291aba2200cb0dddfa2d00197ad90d001e7c51e00f029a44065e3aa3",
+    "preview": {
+      "title": "Purchase voucher dated 2026-04-01",
+      "company": "Tally_Aut",
+      "voucherType": "Purchase",
+      "date": "2026-04-01",
+      "party": "Rushabh Creatify Supplies Pvt Ltd",
+      "reference": "RCS/2026/0417",
+      "narration": "Purchase RCS/2026/0417 from Rushabh Creatify Supplies Pvt Ltd (intra-state)",
+      "entries": [
+        {
+          "ledger": "Purchase",
+          "debit": "80000.00",
+          "credit": ""
+        },
+        {
+          "ledger": "Input CGST",
+          "debit": "7200.00",
+          "credit": ""
+        },
+        {
+          "ledger": "Input SGST",
+          "debit": "7200.00",
+          "credit": ""
+        },
+        {
+          "ledger": "Rushabh Creatify Supplies Pvt Ltd",
+          "debit": "",
+          "credit": "94400.00"
+        }
+      ],
+      "totals": {
+        "debit": "94400.00",
+        "credit": "94400.00",
+        "balanced": true
+      },
+      "warnings": [],
+      "errors": [
+        "Invoice \"RCS/2026/0417\" is already recorded in Tally as voucher 3 dated 2026-04-01.",
+        "An identical entry was already posted as action act_7fcc281b-b076-4299-9b49-b218ba0c49de (verified). Staging it again would post twice."
+      ]
+    },
+    "errors": [
+      {
+        "code": "DUPLICATE_INVOICE",
+        "message": "Invoice \"RCS/2026/0417\" is already recorded in Tally as voucher 3 dated 2026-04-01.",
+        "details": {
+          "referenceNumber": "RCS/2026/0417",
+          "existingVoucher": "3",
+          "existingDate": "2026-04-01",
+          "masterId": "10"
+        }
+      },
+      {
+        "code": "ALREADY_POSTED",
+        "message": "An identical entry was already posted as action act_7fcc281b-b076-4299-9b49-b218ba0c49de (verified). Staging it again would post twice.",
+        "details": {
+          "existingActionId": "act_7fcc281b-b076-4299-9b49-b218ba0c49de",
+          "state": "verified"
+        }
+      }
+    ],
+    "warnings": [],
+    "createdAt": "2026-09-22T06:53:00.938Z",
+    "updatedAt": "2026-09-22T06:53:00.938Z",
+    "attempts": 0,
+    "history": [
+      {
+        "at": "2026-09-22T06:53:00.938Z",
+        "to": "draft",
+        "by": "system",
+        "note": "staged"
+      }
+    ],
+    "approval": null,
+    "execution": null,
+    "verification": null
+  },
+  {
+    "id": "act_934a9efe-b259-40ea-9bc2-583546a6d036",
+    "kind": "accounting_voucher",
+    "company": "Tally_Aut",
+    "state": "pending_approval",
+    "payload": {
+      "voucherType": "Purchase",
+      "date": "2026-04-01",
+      "entries": [
+        {
+          "ledger": "Purchase",
+          "type": "debit",
+          "amount": 80000
+        },
+        {
+          "ledger": "Input CGST",
+          "type": "debit",
+          "amount": 7200
+        },
+        {
+          "ledger": "Input SGST",
+          "type": "debit",
+          "amount": 7200
+        },
+        {
+          "ledger": "Rushabh Creatify Supplies Pvt Ltd",
+          "type": "credit",
+          "amount": 94400
+        }
+      ],
+      "party": "Rushabh Creatify Supplies Pvt Ltd",
+      "referenceNumber": "RCS/2026/04165",
+      "referenceDate": "2026-04-01",
+      "narration": "Purchase RCS/2026/04165 from Rushabh Creatify Supplies Pvt Ltd (intra-state)"
+    },
+    "payloadHash": "89a51aad37e591d71dae4368073b32226286c6bb0d65700f1d59365ce2534110",
+    "preview": {
+      "title": "Purchase voucher dated 2026-04-01",
+      "company": "Tally_Aut",
+      "voucherType": "Purchase",
+      "date": "2026-04-01",
+      "party": "Rushabh Creatify Supplies Pvt Ltd",
+      "reference": "RCS/2026/04165",
+      "narration": "Purchase RCS/2026/04165 from Rushabh Creatify Supplies Pvt Ltd (intra-state)",
+      "entries": [
+        {
+          "ledger": "Purchase",
+          "debit": "80000.00",
+          "credit": ""
+        },
+        {
+          "ledger": "Input CGST",
+          "debit": "7200.00",
+          "credit": ""
+        },
+        {
+          "ledger": "Input SGST",
+          "debit": "7200.00",
+          "credit": ""
+        },
+        {
+          "ledger": "Rushabh Creatify Supplies Pvt Ltd",
+          "debit": "",
+          "credit": "94400.00"
+        }
+      ],
+      "totals": {
+        "debit": "94400.00",
+        "credit": "94400.00",
+        "balanced": true
+      },
+      "warnings": [],
+      "errors": []
+    },
+    "errors": [],
+    "warnings": [],
+    "createdAt": "2026-09-22T06:53:30.893Z",
+    "updatedAt": "2026-09-22T06:53:30.893Z",
+    "attempts": 0,
+    "history": [
+      {
+        "at": "2026-09-22T06:53:30.893Z",
+        "to": "pending_approval",
+        "by": "system",
+        "note": "staged"
+      }
+    ],
+    "approval": null,
+    "execution": null,
+    "verification": null
+  },
+  {
+    "id": "act_4bf20ff6-0f44-48fe-8601-c748477c330f",
+    "kind": "accounting_voucher",
+    "company": "Tally_Aut",
+    "state": "verified",
+    "payload": {
+      "voucherType": "Journal",
+      "date": "2026-04-01",
+      "entries": [
+        {
+          "ledger": "Cash",
+          "type": "debit",
+          "amount": 500
+        },
+        {
+          "ledger": "Purchase",
+          "type": "credit",
+          "amount": 500
+        }
+      ],
+      "narration": "walkthrough test"
+    },
+    "payloadHash": "cc30fd3db0246bda196f72bed899e02d27b84fbebde153579542c07a1c0defb5",
+    "preview": {
+      "title": "Journal voucher dated 2026-04-01",
+      "company": "Tally_Aut",
+      "voucherType": "Journal",
+      "date": "2026-04-01",
+      "party": null,
+      "reference": null,
+      "narration": "walkthrough test",
+      "entries": [
+        {
+          "ledger": "Cash",
+          "debit": "500.00",
+          "credit": ""
+        },
+        {
+          "ledger": "Purchase",
+          "debit": "",
+          "credit": "500.00"
+        }
+      ],
+      "totals": {
+        "debit": "500.00",
+        "credit": "500.00",
+        "balanced": true
+      },
+      "warnings": [],
+      "errors": []
+    },
+    "errors": [],
+    "warnings": [],
+    "createdAt": "2026-09-22T06:54:38.113Z",
+    "updatedAt": "2026-09-22T06:54:50.796Z",
+    "attempts": 1,
+    "history": [
+      {
+        "at": "2026-09-22T06:54:38.113Z",
+        "to": "pending_approval",
+        "by": "system",
+        "note": "staged"
+      },
+      {
+        "at": "2026-09-22T06:54:50.498Z",
+        "from": "pending_approval",
+        "to": "executing",
+        "by": "aniket@letstuteai.in",
+        "note": "approved"
+      },
+      {
+        "at": "2026-09-22T06:54:50.796Z",
+        "from": "executing",
+        "to": "verified",
+        "by": "aniket@letstuteai.in",
+        "note": "verified against Tally"
+      }
+    ],
+    "approval": {
+      "by": "aniket@letstuteai.in",
+      "at": "2026-09-22T06:54:50.498Z"
+    },
+    "execution": {
+      "startedAt": "2026-09-22T06:54:50.536Z",
+      "finishedAt": "2026-09-22T06:54:50.796Z",
+      "posted": true,
+      "importResult": {
+        "created": 1,
+        "altered": 0,
+        "ignored": 0,
+        "errors": 0,
+        "cancelled": 0,
+        "deleted": 0,
+        "combined": 0,
+        "exceptions": 0,
+        "lastVoucherId": "14",
+        "lastMasterId": "0",
+        "raw": "<ENVELOPE>\r\n <HEADER>\r\n  <VERSION>1</VERSION>\r\n  <STATUS>1</STATUS>\r\n </HEADER>\r\n <BODY>\r\n  <DATA>\r\n   <IMPORTRESULT>\r\n    <CREATED>1</CREATED>\r\n    <ALTERED>0</ALTERED>\r\n    <DELETED>0</DELETED>\r\n    <LASTVCHID>14</LASTVCHID>\r\n    <LASTMID>0</LASTMID>\r\n    <COMBINED>0</COMBINED>\r\n    <IGNORED>0</IGNORED>\r\n    <ERRORS>0</ERRORS>\r\n    <CANCELLED>0</CANCELLED>\r\n    <EXCEPTIONS>0</EXCEPTIONS>\r\n   </IMPORTRESULT>\r\n  </DATA>\r\n  <DESC>\r\n   <CMPINFO>\r\n    <COMPANY>0</COMPANY>\r\n    <GROUP>0</GROUP>\r\n    <LEDGER>74</LEDGER>\r\n    <COSTCATEGORY>0</COSTCATEGORY>\r\n    <COSTCENTRE>0</COSTCENTRE>\r\n    <GODOWN>0</GODOWN>\r\n    <STOCKGROUP>0</STOCKGROUP>\r\n    <STOCKCATEGORY>0</STOCKCATEGORY>\r\n    <STOCKITEM>0</STOCKITEM>\r\n    <VOUCHERTYPE>0</VOUCHERTYPE>\r\n    <CURRENCY>14</CURRENCY>\r\n    <UNIT>0</UNIT>\r\n    <BUDGET>0</BUDGET>\r\n    <CLIENTRULE>0</CLIENTRULE>\r\n    <SERVERRULE>0</SERVERRULE>\r\n    <STATE>0</STATE>\r\n    <TDSRATE>0</TDSRATE>\r\n    <TAXCLASSIFICATION>0</TAXCLASSIFICATION>\r\n    <STCATEGORY>0</STCATEGORY>\r\n    <DEDUCTEETYPE>0</DEDUCTEETYPE>\r\n    <ATTENDANCETYPE>0</ATTENDANCETYPE>\r\n    <FBTCATEGORY>0</FBTCATEGORY>\r\n    <FBTASSESSEETYPE>0</FBTASSESSEETYPE>\r\n    <TARIFFCLASSIFICATION>0</TARIFFCLASSIFICATION>\r\n    <EXCISEDUTYCLASSIFICATION>0</EXCISEDUTYCLASSIFICATION>\r\n    <SERIALNUMBER>0</SERIALNUMBER>\r\n    <ADJUSTMENTCLASSIFICATION>0</ADJUSTMENTCLASSIFICATION>\r\n    <INCOMETAXSLAB>0</INCOMETAXSLAB>\r\n    <INCOMETAXCLASSIFICATION>0</INCOMETAXCLASSIFICATION>\r\n    <LBTCLASSIFICATION>0</LBTCLASSIFICATION>\r\n    <TAXUNIT>23</TAXUNIT>\r\n    <RETURNMASTER>0</RETURNMASTER>\r\n    <GSTCLASSIFICATION>0</GSTCLASSIFICATION>\r\n    <VOUCHERNUMBERSERIES>23</VOUCHERNUMBERSERIES>\r\n    <VOUCHER>23</VOUCHER>\r\n   </CMPINFO>\r\n   <CMPINFOEX>\r\n    <IDINFO>\r\n     <LASTCREATEDVCHID>14</LASTCREATEDVCHID>\r\n    </IDINFO>\r\n   </CMPINFOEX>\r\n   <MSTALTIDINFO>\r\n    <EXPSUMID>0</EXPSUMID>\r\n   </MSTALTIDINFO>\r\n  </DESC>\r\n </BODY>\r\n</ENVELOPE>\r\n",
+        "ok": true,
+        "problems": []
+      }
+    },
+    "verification": {
+      "verified": true,
+      "at": "2026-09-22T06:54:50.649Z",
+      "method": "voucher-read-back",
+      "masterId": "14",
+      "voucherNumber": "10",
+      "voucher": {
+        "masterId": "14",
+        "voucherKey": "01b3d0b2-e9e2-4548-8152-093e570aef41-0000000e",
+        "date": "2026-04-01",
+        "voucherType": "Journal",
+        "voucherNumber": "10",
+        "party": "Cash",
+        "reference": null,
+        "narration": "walkthrough test",
+        "isCancelled": false,
+        "isOptional": false,
+        "entries": [
+          {
+            "ledger": "Cash",
+            "amount": 500,
+            "type": "debit",
+            "rawAmount": -500
+          },
+          {
+            "ledger": "Purchase",
+            "amount": 500,
+            "type": "credit",
+            "rawAmount": 500
+          }
+        ],
+        "totals": {
+          "debit": 500,
+          "credit": 500,
+          "balanced": true
+        }
+      }
+    }
+  },
+  {
+    "id": "act_d856283e-dab8-4b57-9e56-b93eafe14415",
+    "kind": "accounting_voucher",
+    "company": "Tally_Aut",
+    "state": "pending_approval",
+    "payload": {
+      "voucherType": "Purchase",
+      "date": "2026-04-02",
+      "entries": [
+        {
+          "ledger": "Purchase",
+          "type": "debit",
+          "amount": 50000
+        },
+        {
+          "ledger": "Input IGST",
+          "type": "debit",
+          "amount": 9000
+        },
+        {
+          "ledger": "Karnataka Components Ltd",
+          "type": "credit",
+          "amount": 59000
+        }
+      ],
+      "party": "Karnataka Components Ltd",
+      "referenceNumber": "KCL-2026-04165",
+      "referenceDate": "2026-04-02",
+      "narration": "Purchase KCL-2026-04165 from Karnataka Components Ltd (inter-state)"
+    },
+    "payloadHash": "232a9bdba8ae12933f5409de827e0a0c63088abbd02b7ee00cb87e48e6121315",
+    "preview": {
+      "title": "Purchase voucher dated 2026-04-02",
+      "company": "Tally_Aut",
+      "voucherType": "Purchase",
+      "date": "2026-04-02",
+      "party": "Karnataka Components Ltd",
+      "reference": "KCL-2026-04165",
+      "narration": "Purchase KCL-2026-04165 from Karnataka Components Ltd (inter-state)",
+      "entries": [
+        {
+          "ledger": "Purchase",
+          "debit": "50000.00",
+          "credit": ""
+        },
+        {
+          "ledger": "Input IGST",
+          "debit": "9000.00",
+          "credit": ""
+        },
+        {
+          "ledger": "Karnataka Components Ltd",
+          "debit": "",
+          "credit": "59000.00"
+        }
+      ],
+      "totals": {
+        "debit": "59000.00",
+        "credit": "59000.00",
+        "balanced": true
+      },
+      "warnings": [],
+      "errors": []
+    },
+    "errors": [],
+    "warnings": [],
+    "createdAt": "2026-09-22T06:55:08.523Z",
+    "updatedAt": "2026-09-22T06:55:08.523Z",
+    "attempts": 0,
+    "history": [
+      {
+        "at": "2026-09-22T06:55:08.523Z",
+        "to": "pending_approval",
+        "by": "system",
+        "note": "staged"
+      }
+    ],
+    "approval": null,
+    "execution": null,
+    "verification": null
+  }
+]
