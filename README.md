@@ -9,6 +9,13 @@ Ask questions about your books, describe an entry, or upload an invoice and let
 it be read. Nothing posts: every write is validated, approved by a named person,
 posted once, read back out of Tally, and recorded in an append-only audit log.
 
+> **Feature expansion:** stock journals and manufacturing, BOMs, job work,
+> orders and notes, GST return drafts, e-invoice JSON, payroll, printable
+> documents and cheques, budgets, TDS entries, bank reconciliation statements,
+> period close and lock, users and roles, and multi-company consolidation —
+> see **[docs/FEATURES-V2.md](docs/FEATURES-V2.md)**. The "Not yet built"
+> section below describes the original release.
+
 ---
 
 ## Quick start
@@ -1030,6 +1037,9 @@ decoded — the same trap as a bare negative ledger balance.
 ---
 
 ## Not yet built
+
+*(Original release. Most of what follows is now covered — see
+[docs/FEATURES-V2.md](docs/FEATURES-V2.md).)*
 
 Everything in the brief is built. What remains is from its "Next release" list
 and was never in scope for these phases: batch and serial tracking, order

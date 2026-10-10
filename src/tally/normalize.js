@@ -49,6 +49,13 @@ export function normalizeLedger(row) {
     phone: textOf(row.LEDGERPHONE) || null,
     billWise: boolOf(row.ISBILLWISEON),
     masterId: textOf(row.MASTERID) || null,
+    email: textOf(row.EMAIL) || null,
+    state: textOf(row.LEDSTATENAME) || null,
+    pincode: textOf(row.PINCODE) || null,
+    address: asArray(row['ADDRESS.LIST']).flatMap((a) => asArray(a?.ADDRESS ?? a)).map((a) => textOf(a)).filter(Boolean),
+    // Tally keeps a credit limit on the debit side like the balance it limits,
+    // so the sign carries no meaning here. Zero means none was set.
+    creditLimit: Math.abs(amountOf(row.CREDITLIMIT)) || null,
   };
 }
 
@@ -159,7 +166,13 @@ function normalizeLedgerEntry(entry) {
 }
 
 export function normalizeVoucher(row) {
-  const inventory = asArray(row['ALLINVENTORYENTRIES.LIST']).map(normalizeInventoryEntry);
+  // A stock journal keeps its two sides in separate lists rather than in
+  // ALLINVENTORYENTRIES; read all three so one shape serves every voucher.
+  const inventory = [
+    ...asArray(row['ALLINVENTORYENTRIES.LIST']),
+    ...asArray(row['INVENTORYENTRIESOUT.LIST']),
+    ...asArray(row['INVENTORYENTRIESIN.LIST']),
+  ].map(normalizeInventoryEntry);
 
   // Tally exposes the accounting side twice on an invoice-mode voucher:
   //   ALLLEDGERENTRIES.LIST  — the COMPLETE picture, with each stock line's

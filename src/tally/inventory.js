@@ -24,7 +24,12 @@ function quantity(raw) {
   const text = textOf(raw).trim();
   if (text === '') return { text: '', value: null, unit: null };
   const parsed = normalizeQuantity(raw);
-  return { text, value: parsed.value, unit: parsed.unit };
+  // normalizeQuantity reports a magnitude (it was written for voucher lines,
+  // where direction is carried separately). On a display report the minus
+  // sign IS the information — "-3 Box" is negative stock — so put it back,
+  // or isNegativeStock below can never be true.
+  const negative = /^-/.test(text);
+  return { text, value: parsed.value === null ? null : (negative ? -parsed.value : parsed.value), unit: parsed.unit };
 }
 
 export const inventoryMethods = {

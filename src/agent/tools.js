@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { TallyError } from '../tally/errors.js';
 import { requireCapability } from '../tally/capabilities.js';
 import { redact } from '../config.js';
+import { FEATURE_TOOLS } from '../features/index.js';
 
 /**
  * The allowlist. This module defines every tool the model can reach, and the
@@ -564,6 +565,9 @@ export const TOOLS = [
       label: a.label ?? undefined,
     }),
   },
+
+  // Tools contributed by src/features/*, held to the same rules as the above.
+  ...FEATURE_TOOLS,
 ];
 
 /** The model may send nulls for absent optionals; the payload schemas want them gone. */

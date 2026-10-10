@@ -439,6 +439,147 @@ export function validateGodowns(items, godowns, findings = new Findings()) {
   return findings;
 }
 
+/**
+ * A voucher type outside the accounting set — Stock Journal, an order, a note
+ * — must still exist in this company, either by name or as the parent of a
+ * user-defined type (a "Manufacturing Journal" usually sits under Stock
+ * Journal). Orders and notes only exist once their F11 switch is on, so a
+ * missing one names the switch.
+ */
+export function validateVoucherTypeInCompany(voucherType, tallyVoucherTypes, findings = new Findings(), { family = null } = {}) {
+  const wanted = voucherType.toLowerCase();
+  const match = tallyVoucherTypes.find((v) => v.name.toLowerCase() === wanted);
+  if (!match) {
+    findings.error(
+      'VOUCHER_TYPE_NOT_FOUND',
+      `Voucher type "${voucherType}" does not exist in this company. Orders, delivery and receipt notes and rejections `
+      + 'appear only once their feature is switched on in F11 > Inventory Features.',
+      { voucherType },
+    );
+    return findings;
+  }
+  if (family && match.name.toLowerCase() !== family.toLowerCase()
+    && String(match.parent ?? '').toLowerCase() !== family.toLowerCase()) {
+    findings.error(
+      'VOUCHER_TYPE_WRONG_FAMILY',
+      `"${voucherType}" is a ${match.parent || 'different'} voucher type, not a ${family}.`,
+      { voucherType, parent: match.parent ?? null, expected: family },
+    );
+  }
+  return findings;
+}
+
+/**
+ * The arithmetic and shape of a stock journal, by purpose.
+ *
+ * A transfer must move each item out and back in at the same quantity, from
+ * one godown to a different one — otherwise it is not a transfer but a
+ * silent write-off. Manufacturing may legitimately value production above or
+ * below what it consumed (labour, overheads, yield), so a difference is a
+ * warning that names it rather than an error.
+ */
+export function validateStockJournal(payload, findings = new Findings()) {
+  const out = payload.consumption ?? [];
+  const inn = payload.production ?? [];
+  const sum = (lines) => sumMoney(lines.map((l) => l.amount));
+
+  for (const line of [...out, ...inn]) {
+    const computed = multiplyMoney(line.quantity, line.rate);
+    if (!moneyWithin(computed, line.amount, 0.02)) {
+      findings.error('LINE_ARITHMETIC',
+        `${line.stockItem}: ${line.quantity} x ${line.rate.toFixed(2)} = ${computed.toFixed(2)}, not ${line.amount.toFixed(2)}.`,
+        { stockItem: line.stockItem });
+    }
+  }
+
+  // Job work in is deliberately not here: what comes back from a job worker is
+  // often a different item (cut sheet in, brackets out).
+  const isTransfer = ['transfer', 'job_work_out'].includes(payload.purpose);
+  if (isTransfer) {
+    if (out.length === 0 || inn.length === 0) {
+      findings.error('TRANSFER_ONE_SIDED', 'A transfer needs the stock leaving one godown and arriving in another.');
+    }
+    const qty = (lines) => {
+      const m = new Map();
+      for (const l of lines) m.set(l.stockItem.toLowerCase(), (m.get(l.stockItem.toLowerCase()) ?? 0) + l.quantity);
+      return m;
+    };
+    const sent = qty(out);
+    const received = qty(inn);
+    for (const item of new Set([...sent.keys(), ...received.keys()])) {
+      const s = sent.get(item) ?? 0;
+      const r = received.get(item) ?? 0;
+      if (Math.abs(s - r) > 1e-9) {
+        findings.error('TRANSFER_QUANTITY_MISMATCH',
+          `${item}: ${s} sent but ${r} received. A transfer cannot gain or lose stock; record the difference as an adjustment.`,
+          { stockItem: item, sent: s, received: r });
+      }
+    }
+    for (const l of [...out, ...inn]) {
+      if (!l.godown) {
+        findings.error('GODOWN_REQUIRED', `${l.stockItem}: a transfer line must name its godown.`, { stockItem: l.stockItem });
+      }
+    }
+    const from = new Set(out.map((l) => l.godown?.toLowerCase()).filter(Boolean));
+    const to = new Set(inn.map((l) => l.godown?.toLowerCase()).filter(Boolean));
+    if (from.size > 0 && [...from].every((g) => to.has(g)) && [...to].every((g) => from.has(g))) {
+      findings.error('TRANSFER_SAME_GODOWN', 'The stock leaves and arrives in the same godown, so nothing would move.');
+    }
+  }
+
+  if (payload.purpose === 'manufacture') {
+    if (out.length === 0 || inn.length === 0) {
+      findings.error('MANUFACTURE_ONE_SIDED', 'Manufacturing needs components consumed and finished goods produced.');
+    } else if (!moneyEquals(sum(out), sum(inn))) {
+      const diff = moneyDifference(sum(inn), sum(out));
+      findings.warn('PRODUCTION_VALUE_DIFFERS',
+        `Production is valued at ${sum(inn).toFixed(2)} against ${sum(out).toFixed(2)} consumed (difference ${diff.toFixed(2)}). `
+        + 'That is normal when labour or overheads are absorbed, but confirm it is intended.',
+        { consumed: sum(out), produced: sum(inn) });
+    }
+  }
+  return findings;
+}
+
+/**
+ * Entries dated on or before a locked date are refused.
+ *
+ * The lock belongs to this agent, not to Tally: it stops the agent preparing
+ * entries into a period someone has closed. It does not stop a person typing
+ * one straight into Tally — TallyPrime has its own period-lock feature for that.
+ */
+export function validatePeriodOpen(date, lock, findings = new Findings()) {
+  if (!date || !lock?.lockedThrough) return findings;
+  if (date <= lock.lockedThrough) {
+    findings.error(
+      'PERIOD_LOCKED',
+      `${date} is in a closed period: entries up to ${lock.lockedThrough} were locked by ${lock.by ?? 'an admin'}`
+      + `${lock.at ? ` on ${lock.at.slice(0, 10)}` : ''}. An admin must reopen the period first.`,
+      { date, lockedThrough: lock.lockedThrough },
+    );
+  }
+  return findings;
+}
+
+/**
+ * A sale that takes a customer past their credit limit is a warning, not a
+ * block: the limit is a policy, and the person approving may know why it is
+ * fine. But they must see it before they approve.
+ */
+export function validateCreditLimit({ party, amount }, ledger, findings = new Findings()) {
+  if (!party || !ledger?.creditLimit) return findings;
+  const owed = ledger.closingBalanceType === 'debit' ? ledger.closingBalance : -(ledger.closingBalance ?? 0);
+  const after = sumMoney([owed, amount]);
+  if (after > ledger.creditLimit) {
+    findings.warn(
+      'CREDIT_LIMIT_EXCEEDED',
+      `${party} would owe ${after.toFixed(2)} after this entry, above their credit limit of ${ledger.creditLimit.toFixed(2)}.`,
+      { party, owedBefore: owed, after, creditLimit: ledger.creditLimit },
+    );
+  }
+  return findings;
+}
+
 /** Cheap Levenshtein, used only to suggest a near-miss ledger name. */
 function closestName(target, candidates, maxDistance = 3) {
   const t = target.toLowerCase();

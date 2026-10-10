@@ -21,6 +21,8 @@ import { runDiagnostics, financialYearEnd } from './ops/diagnostics.js';
 import { parseStatement, verifyRunningBalance } from './banking/statement.js';
 import { reconcile } from './banking/reconcile.js';
 import { config, redact } from './config.js';
+import { RoleRegistry } from './ops/roles.js';
+import { registerFeatureRoutes } from './features/index.js';
 
 /**
  * The local HTTP surface.
@@ -35,7 +37,8 @@ import { config, redact } from './config.js';
 export function createServer({
   allowedHosts = (config.APP_ALLOWED_HOSTS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
   allowedOrigins = (config.APP_ALLOWED_ORIGINS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
-  limits = {}, reader = new TallyReader(), service = null, agents = new Map(), pipeline = null } = {}) {
+  limits = {}, reader = new TallyReader(), service = null, agents = new Map(), pipeline = null,
+  roles = new RoleRegistry() } = {}) {
   const app = express();
 
   // Order matters. Host and origin checks come before anything that could act
@@ -54,6 +57,9 @@ export function createServer({
   // because the CLI, the UI and every documented command already use them.
   app.use(apiVersionAlias());
 
+  // A month's GSTR-2B download for a busy business runs to several megabytes.
+  // Only that route gets the larger allowance; everything else stays at 1 MB.
+  app.use('/api/gst/gstr2b', express.json({ limit: '20mb' }));
   app.use(express.json({ limit: '1mb' }));
   // Guards every route but /api/health when a token is configured; a no-op
   // when one is not, because the server is then loopback-only.
@@ -126,11 +132,39 @@ export function createServer({
   const wrap = (handler) => (req, res) => {
     Promise.resolve(handler(req, res)).catch((err) => {
       const status = err.code === 'ACTION_NOT_FOUND' ? 404
-        : err.code === 'STATE_CONFLICT' || err.code === 'DELETE_REFUSED' ? 409
-        : err.code === 'INVALID_TRANSITION' || err.code === 'APPROVER_REQUIRED' ? 400
+        : err.code === 'STATE_CONFLICT' || err.code === 'DELETE_REFUSED' || err.code === 'PERIOD_LOCKED' ? 409
+        : err.code === 'INVALID_TRANSITION' || err.code === 'APPROVER_REQUIRED'
+          || err.code === 'BAD_USER' || err.code === 'FIRST_USER_MUST_BE_ADMIN' || err.code === 'LAST_ADMIN'
+          || err.code === 'BAD_REQUEST' ? 400
+        : err.code === 'NOT_FOUND' ? 404
         : 500;
       res.status(status).json({ error: { code: err.code ?? 'INTERNAL', message: redact(err.message) } });
     });
+  };
+
+  /**
+   * Role check for a named action. Sends the refusal itself and returns false,
+   * so a route reads `if (!(await requireRole(req, res, 'approver'))) return;`.
+   * With no users configured every named caller passes, as before.
+   */
+  const requireRole = async (req, res, role, { amount = null } = {}) => {
+    const by = callerOf(req);
+    if (!by) {
+      res.status(400).json({ error: { code: 'APPROVER_REQUIRED', message: 'Send "by" in the body or an X-Tally-User header.' } });
+      return false;
+    }
+    const refusal = await roles.check(by, role, { amount });
+    if (refusal) {
+      res.status(refusal.status).json({ error: { code: refusal.code, message: refusal.message } });
+      return false;
+    }
+    return true;
+  };
+
+  /** The amount an approval limit is measured against. */
+  const amountOf = (action) => {
+    const n = Number(action?.preview?.totals?.debit ?? NaN);
+    return Number.isFinite(n) ? n : null;
   };
 
   // ---------------------------------------------------------------- health
@@ -449,6 +483,8 @@ export function createServer({
     if (!by) {
       return res.status(400).json({ error: { code: 'APPROVER_REQUIRED', message: 'Send "by" in the body or an X-Tally-User header.' } });
     }
+    const pending = await actions.getAction(req.params.id);
+    if (!(await requireRole(req, res, 'approver', { amount: amountOf(pending) }))) return;
     const action = await actions.approve(req.params.id, { by });
     res.status(action.state === STATES.VERIFIED ? 200 : 202).json(action);
   }));
@@ -458,6 +494,7 @@ export function createServer({
     if (!by) {
       return res.status(400).json({ error: { code: 'APPROVER_REQUIRED', message: 'Send "by" in the body or an X-Tally-User header.' } });
     }
+    if (!(await requireRole(req, res, 'approver'))) return;
     res.json(await actions.reject(req.params.id, { by, reason: req.body?.reason }));
   }));
 
@@ -466,6 +503,7 @@ export function createServer({
     if (!by) {
       return res.status(400).json({ error: { code: 'APPROVER_REQUIRED', message: 'Send "by" in the body or an X-Tally-User header.' } });
     }
+    if (!(await requireRole(req, res, 'approver'))) return;
     res.json(await actions.retry(req.params.id, { by }));
   }));
 
@@ -479,6 +517,7 @@ export function createServer({
     if (!by) {
       return res.status(400).json({ error: { code: 'APPROVER_REQUIRED', message: 'Send "by" in the body or an X-Tally-User header.' } });
     }
+    if (!(await requireRole(req, res, 'preparer'))) return;
     res.json(await actions.archive(req.params.id, { by }));
   }));
 
@@ -487,6 +526,7 @@ export function createServer({
     if (!by) {
       return res.status(400).json({ error: { code: 'APPROVER_REQUIRED', message: 'Send "by" in the body or an X-Tally-User header.' } });
     }
+    if (!(await requireRole(req, res, 'preparer'))) return;
     res.json(await actions.unarchive(req.params.id, { by }));
   }));
 
@@ -496,6 +536,7 @@ export function createServer({
     if (!by) {
       return res.status(400).json({ error: { code: 'APPROVER_REQUIRED', message: 'Send "by" in the body or an X-Tally-User header.' } });
     }
+    if (!(await requireRole(req, res, 'approver'))) return;
     res.json(await actions.purge({ scope: req.body?.scope, by }));
   }));
 
@@ -508,6 +549,7 @@ export function createServer({
     if (!by) {
       return res.status(400).json({ error: { code: 'APPROVER_REQUIRED', message: 'Send "by" in the body or an X-Tally-User header.' } });
     }
+    if (!(await requireRole(req, res, 'approver'))) return;
     res.json(await actions.remove(req.params.id, { by }));
   }));
 
@@ -520,6 +562,7 @@ export function createServer({
     if (!by) {
       return res.status(400).json({ error: { code: 'APPROVER_REQUIRED', message: 'Send "by" in the body or an X-Tally-User header.' } });
     }
+    if (!(await requireRole(req, res, 'admin'))) return;
     res.json(await actions.recover({ by, minimumAgeMs: Number(req.body?.minimumAgeMs ?? 120000) }));
   }));
 
@@ -534,6 +577,44 @@ export function createServer({
   app.get('/api/diagnostics/last-exchange', wrap(async (_req, res) => {
     res.json(reader.lastExchange() ?? { message: 'No Tally request has been made yet.' });
   }));
+
+  // ----------------------------------------------------------------- users
+
+  /** Who may use this agent, and at what level. Empty means checks are off. */
+  app.get('/api/users', wrap(async (_req, res) => {
+    const users = await roles.list();
+    res.json({ enabled: users.length > 0, roles: ['viewer', 'preparer', 'approver', 'admin'], users });
+  }));
+
+  /**
+   * Add or change a user. While the list is empty anyone named may add the
+   * first admin; after that only an admin may change it.
+   */
+  app.put('/api/users', wrap(async (req, res) => {
+    if (await roles.enabled()) {
+      if (!(await requireRole(req, res, 'admin'))) return;
+    } else if (!callerOf(req)) {
+      return res.status(400).json({ error: { code: 'APPROVER_REQUIRED', message: 'Send "by" in the body or an X-Tally-User header.' } });
+    }
+    const { name, role, approvalLimit } = req.body ?? {};
+    const doc = await roles.upsert({ name, role, approvalLimit }, { by: callerOf(req) });
+    await actions.store.load();
+    await actions.store.audit({ event: 'user.changed', by: callerOf(req), user: name, role, approvalLimit: approvalLimit ?? null });
+    res.json({ enabled: true, users: doc.users });
+  }));
+
+  app.delete('/api/users/:name', wrap(async (req, res) => {
+    if (!(await requireRole(req, res, 'admin'))) return;
+    const doc = await roles.remove(req.params.name);
+    await actions.store.load();
+    await actions.store.audit({ event: 'user.removed', by: callerOf(req), user: req.params.name });
+    res.json({ enabled: (doc.users ?? []).length > 0, users: doc.users ?? [] });
+  }));
+
+  // Routes contributed by src/features/*.
+  registerFeatureRoutes(app, {
+    reader, actions, wrap, callerOf, requireRole, roles, upload, statementUpload, runtime,
+  });
 
   app.use((err, _req, res, next) => {
     if (!err) return next();

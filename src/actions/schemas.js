@@ -78,6 +78,8 @@ export const LedgerCreationSchema = z
     phone: z.string().trim().max(50).optional(),
     email: z.string().trim().email().max(200).optional(),
     billWise: z.boolean().optional(),
+    /** The most this party may owe before staging a sale warns. */
+    creditLimit: positiveAmount.optional(),
     notes: z.string().trim().max(1000).optional(),
   })
   .strict()
@@ -182,6 +184,28 @@ export const StockItemCreationSchema = z
     openingQuantity: z.number().finite().nonnegative().optional(),
     openingRate: positiveAmount.optional(),
   })
+  .strict()
+  .refine(
+    // Half an opening balance is worse than none: a quantity with no rate
+    // carries stock at zero value into the balance sheet.
+    (v) => (v.openingQuantity === undefined) === (v.openingRate === undefined),
+    { message: 'openingQuantity and openingRate must be given together', path: ['openingRate'] },
+  );
+
+export const GodownCreationSchema = z
+  .object({
+    name: masterName,
+    /** Another godown; omitted for a top-level location. */
+    parent: masterName.optional(),
+    address: z.string().trim().max(500).optional(),
+  })
+  .strict();
+
+export const StockGroupCreationSchema = z
+  .object({
+    name: masterName,
+    parent: masterName.optional(),
+  })
   .strict();
 
 export const UnitCreationSchema = z
@@ -228,6 +252,79 @@ export const InventoryInvoiceSchema = z
   })
   .strict();
 
+/**
+ * Inventory vouchers that are not invoices: orders, delivery and receipt
+ * notes, and rejections. Same line structure as an invoice; each type needs
+ * its F11 feature switched on, which the tool layer checks.
+ */
+export const INVENTORY_DOCUMENT_TYPES = Object.freeze([
+  'Sales Order', 'Purchase Order', 'Delivery Note', 'Receipt Note', 'Rejections In', 'Rejections Out',
+]);
+
+export const InventoryDocumentSchema = z
+  .object({
+    voucherType: z.enum(INVENTORY_DOCUMENT_TYPES),
+    date: isoDate,
+    party: masterName,
+    account: masterName,
+    items: z.array(InventoryLineSchema).min(1, 'a stock document needs at least one stock line').max(200),
+    taxes: z.array(VoucherEntrySchema).max(50).optional(),
+    total: positiveAmount,
+    /** The order number; on a note, the order it fulfils. */
+    referenceNumber: z.string().trim().max(100).optional(),
+    /** When the order is due; orders only. */
+    dueDate: isoDate.optional(),
+    narration,
+    allowDuplicate: z.boolean().optional(),
+  })
+  .strict();
+
+/**
+ * One side of a stock journal line. Unlike an invoice line there is no
+ * account: a stock journal moves stock between items or godowns without
+ * touching a ledger.
+ */
+export const StockJournalLineSchema = z
+  .object({
+    stockItem: masterName,
+    quantity: z.number().finite().positive('quantity must be greater than zero'),
+    unit: masterName,
+    rate: positiveAmount,
+    amount: positiveAmount,
+    godown: masterName.optional(),
+  })
+  .strict()
+  .refine(
+    (v) => Math.abs(v.quantity * v.rate - v.amount) <= 0.02,
+    { message: 'quantity x rate does not equal amount', path: ['amount'] },
+  );
+
+/**
+ * A stock journal: consumption on one side, production on the other.
+ *
+ *   transfer     — the same items leave one godown and arrive in another
+ *   manufacture  — components are consumed and finished goods produced
+ *   job_work_out — stock sent to a job worker's godown (a transfer, labelled)
+ *   job_work_in  — stock received back, possibly as different items
+ *   adjustment   — shortage, wastage or a physical-count correction
+ */
+export const STOCK_JOURNAL_PURPOSES = Object.freeze(['transfer', 'manufacture', 'job_work_out', 'job_work_in', 'adjustment']);
+
+export const StockJournalSchema = z
+  .object({
+    purpose: z.enum(STOCK_JOURNAL_PURPOSES),
+    /** An existing voucher type of the Stock Journal family; defaults to "Stock Journal". */
+    voucherType: masterName.optional(),
+    date: isoDate,
+    consumption: z.array(StockJournalLineSchema).max(200).default([]),
+    production: z.array(StockJournalLineSchema).max(200).default([]),
+    referenceNumber: z.string().trim().max(100).optional(),
+    narration,
+  })
+  .strict()
+  .refine((v) => v.consumption.length + v.production.length > 0,
+    { message: 'a stock journal needs at least one line', path: ['consumption'] });
+
 // ---------------------------------------------------------------- batch
 
 /** Batch size is capped so one mistake cannot enqueue thousands of writes. */
@@ -248,6 +345,10 @@ export const ACTION_KINDS = Object.freeze({
   UNIT_CREATION: 'unit_creation',
   STOCK_ITEM_CREATION: 'stock_item_creation',
   INVENTORY_INVOICE: 'inventory_invoice',
+  GODOWN_CREATION: 'godown_creation',
+  STOCK_GROUP_CREATION: 'stock_group_creation',
+  STOCK_JOURNAL: 'stock_journal',
+  INVENTORY_DOCUMENT: 'inventory_document',
 });
 
 const SCHEMA_BY_KIND = Object.freeze({
@@ -256,6 +357,10 @@ const SCHEMA_BY_KIND = Object.freeze({
   [ACTION_KINDS.UNIT_CREATION]: UnitCreationSchema,
   [ACTION_KINDS.STOCK_ITEM_CREATION]: StockItemCreationSchema,
   [ACTION_KINDS.INVENTORY_INVOICE]: InventoryInvoiceSchema,
+  [ACTION_KINDS.GODOWN_CREATION]: GodownCreationSchema,
+  [ACTION_KINDS.STOCK_GROUP_CREATION]: StockGroupCreationSchema,
+  [ACTION_KINDS.STOCK_JOURNAL]: StockJournalSchema,
+  [ACTION_KINDS.INVENTORY_DOCUMENT]: InventoryDocumentSchema,
 });
 
 export function schemaFor(kind) {

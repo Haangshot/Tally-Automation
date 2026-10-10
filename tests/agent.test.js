@@ -11,6 +11,7 @@ import { translate, ModelError } from '../src/agent/model.js';
 import { ActionService } from '../src/actions/service.js';
 import { ActionStore } from '../src/actions/store.js';
 import { STATES } from '../src/actions/states.js';
+import { FEATURE_TOOLS, FEATURE_MODULES } from '../src/features/index.js';
 
 /**
  * The loop is driven by a scripted model, so these tests are deterministic and
@@ -63,7 +64,10 @@ describe('tool allowlist', () => {
   test('exposes exactly the tools on the allowlist', () => {
     // Pinned deliberately. A new tool appearing here is a deliberate decision
     // with a test to change, not something that arrives unnoticed in a diff.
-    const names = TOOLS.map((t) => t.name).sort();
+    // The original allowlist, pinned. Feature-module tools are pinned
+    // separately below, so a new one in either place is a test change.
+    const featureNames = new Set(FEATURE_TOOLS.map((t) => t.name));
+    const names = TOOLS.map((t) => t.name).filter((n) => !featureNames.has(n)).sort();
     assert.deepEqual(names, [
       'check_tds_applicability', 'find_vouchers', 'get_balance_sheet',
       'get_bank_book', 'get_batch_expiry', 'get_bill_outstandings',
@@ -87,7 +91,10 @@ describe('tool allowlist', () => {
     // to post. Every non-staging tool must be a read.
     const stagers = TOOLS.filter((t) => t.stages).map((t) => t.name).sort();
     assert.deepEqual(stagers, [
-      'stage_accounting_voucher', 'stage_ledger_creation', 'stage_voucher_batch',
+      'stage_accounting_voucher', 'stage_godown_creation', 'stage_inventory_invoice',
+      'stage_inventory_order', 'stage_ledger_creation', 'stage_manufacture_from_bom',
+      'stage_payroll_journal', 'stage_stock_group_creation', 'stage_stock_item_creation',
+      'stage_stock_journal', 'stage_tds_deduction', 'stage_unit_creation', 'stage_voucher_batch',
     ]);
     for (const t of TOOLS) {
       assert.equal(t.stages === true, t.name.startsWith('stage_'),
@@ -95,6 +102,30 @@ describe('tool allowlist', () => {
     }
   });
 
+  test('each feature module exposes exactly its pinned tools', () => {
+    const byModule = Object.fromEntries(
+      Object.entries(FEATURE_MODULES).map(([k, m]) => [k, (m.tools ?? []).map((t) => t.name).sort()]),
+    );
+    assert.deepEqual(byModule, {
+      gst: ['get_gstr1_summary', 'get_gstr3b_summary', 'prepare_e_invoice_json', 'prepare_e_way_bill_json'],
+      print: ['get_future_dated_cheques', 'get_payment_reminders', 'get_printable_document_links'],
+      payroll: ['get_payroll_preview', 'get_payroll_statutory_summary', 'list_payroll_employees', 'stage_payroll_journal'],
+      controls: [
+        'get_bank_reconciliation_statement', 'get_budget_variance', 'get_changes_since_snapshot',
+        'get_consolidated_trial_balance', 'get_stock_valuation_comparison', 'get_tds_payable_summary',
+        'stage_tds_deduction',
+      ],
+      operations: [
+        'get_job_work_register', 'get_period_close_checklist', 'get_period_lock_status',
+        'list_bills_of_materials', 'stage_godown_creation', 'stage_inventory_invoice',
+        'stage_inventory_order', 'stage_manufacture_from_bom', 'stage_stock_group_creation',
+        'stage_stock_item_creation', 'stage_stock_journal', 'stage_unit_creation',
+      ],
+    });
+    // No two modules may claim the same name.
+    const all = TOOLS.map((t) => t.name);
+    assert.equal(new Set(all).size, all.length, 'tool names must be unique');
+  });
   test('a capability-gated tool disappears when its feature is off', () => {
     const off = {
       ok: true,

@@ -124,6 +124,9 @@ export function buildLedgerXml(payload, { company, remoteId }) {
     payload.phone ? `<LEDGERPHONE>${esc(payload.phone)}</LEDGERPHONE>` : '',
     payload.email ? `<EMAIL>${esc(payload.email)}</EMAIL>` : '',
     payload.billWise !== undefined ? `<ISBILLWISEON>${payload.billWise ? 'Yes' : 'No'}</ISBILLWISEON>` : '',
+    // Written on the debit side, like the receivable it limits. The reader
+    // takes its magnitude, so a sign Tally stores differently cannot invert it.
+    payload.creditLimit !== undefined ? `<CREDITLIMIT>${(-Math.abs(payload.creditLimit)).toFixed(2)}</CREDITLIMIT>` : '',
     payload.address
       ? `<ADDRESS.LIST TYPE="String"><ADDRESS>${esc(payload.address)}</ADDRESS></ADDRESS.LIST>`
       : '',
@@ -262,6 +265,7 @@ export function buildStockItemXml(payload, { company, remoteId }) {
     '<ISBATCHWISEON>No</ISBATCHWISEON>',
     '<ISPERISHABLEON>No</ISPERISHABLEON>',
     '<ISENTRYTAXAPPLICABLE>No</ISENTRYTAXAPPLICABLE>',
+    openingStockXml(payload),
   ].join('');
 
   return envelope('All Masters', company,
@@ -393,4 +397,201 @@ export function buildInventoryVoucherXml(payload, { company, remoteId }) {
   return envelope('Vouchers', company, message);
 }
 
-export { ledgerEntryXml, inventoryEntryXml, invoiceLedgerXml };
+/**
+ * Opening stock on a stock item master.
+ *
+ * Quantity and rate travel as Tally writes them ("100 Kg", "80.00/Kg"); the
+ * value is negative because stock on hand is an asset on the debit side — the
+ * same convention normalizeStockItem decodes on the way back.
+ */
+function openingStockXml(payload) {
+  if (payload.openingQuantity === undefined || payload.openingRate === undefined) return '';
+  const qty = `${payload.openingQuantity} ${payload.unit}`;
+  const value = Math.round(payload.openingQuantity * payload.openingRate * 100) / 100;
+  return (
+    `<OPENINGBALANCE>${esc(qty)}</OPENINGBALANCE>`
+    + `<OPENINGRATE>${Number(payload.openingRate).toFixed(2)}/${esc(payload.unit)}</OPENINGRATE>`
+    + `<OPENINGVALUE>${(-value).toFixed(2)}</OPENINGVALUE>`
+  );
+}
+
+/** Build the Import request for a godown (a stock location). */
+export function buildGodownXml(payload, { company, remoteId }) {
+  if (!company) throw new TallyError(TallyErrorCode.INVALID_ARGUMENT, 'company is required to build a godown import.');
+  const body = [
+    `<NAME>${esc(payload.name)}</NAME>`,
+    payload.parent ? `<PARENT>${esc(payload.parent)}</PARENT>` : '<PARENT/>',
+    payload.address
+      ? `<ADDRESS.LIST TYPE="String"><ADDRESS>${esc(payload.address)}</ADDRESS></ADDRESS.LIST>`
+      : '',
+  ].join('');
+  return envelope('All Masters', company,
+    `<GODOWN NAME="${esc(payload.name)}" ACTION="Create"${remoteId ? ` RemoteId="${esc(remoteId)}"` : ''}>${body}</GODOWN>`);
+}
+
+/** Build the Import request for a stock group. */
+export function buildStockGroupXml(payload, { company, remoteId }) {
+  if (!company) throw new TallyError(TallyErrorCode.INVALID_ARGUMENT, 'company is required to build a stock group import.');
+  const body = [
+    `<NAME>${esc(payload.name)}</NAME>`,
+    payload.parent ? `<PARENT>${esc(payload.parent)}</PARENT>` : '<PARENT/>',
+    // Quantities of different items under one group are only added up when
+    // they share a unit; "Yes" is Tally's default and right for most groups.
+    '<ISADDABLE>Yes</ISADDABLE>',
+  ].join('');
+  return envelope('All Masters', company,
+    `<STOCKGROUP NAME="${esc(payload.name)}" ACTION="Create"${remoteId ? ` RemoteId="${esc(remoteId)}"` : ''}>${body}</STOCKGROUP>`);
+}
+
+/**
+ * One line of a stock journal.
+ *
+ * Production (stock arriving) is the debit side: ISDEEMEDPOSITIVE=Yes and a
+ * negative amount, exactly as on a purchase. Consumption is the mirror image.
+ * There is no ACCOUNTINGALLOCATIONS.LIST — a stock journal moves stock, not
+ * money, and an allocation here would post to a ledger nobody asked for.
+ */
+function stockJournalLineXml(line, { inward }) {
+  const amount = Math.abs(line.amount);
+  const signed = (inward ? -amount : amount).toFixed(2);
+  const qty = `${line.quantity} ${line.unit}`;
+  const tag = inward ? 'INVENTORYENTRIESIN.LIST' : 'INVENTORYENTRIESOUT.LIST';
+  return (
+    `<${tag}>`
+    + `<STOCKITEMNAME>${esc(line.stockItem)}</STOCKITEMNAME>`
+    + `<ISDEEMEDPOSITIVE>${inward ? 'Yes' : 'No'}</ISDEEMEDPOSITIVE>`
+    + `<RATE>${Number(line.rate).toFixed(2)}/${esc(line.unit)}</RATE>`
+    + `<ACTUALQTY>${esc(qty)}</ACTUALQTY>`
+    + `<BILLEDQTY>${esc(qty)}</BILLEDQTY>`
+    + `<AMOUNT>${signed}</AMOUNT>`
+    + (line.godown
+      ? '<BATCHALLOCATIONS.LIST>'
+        + `<GODOWNNAME>${esc(line.godown)}</GODOWNNAME>`
+        + '<BATCHNAME>Primary Batch</BATCHNAME>'
+        + `<ACTUALQTY>${esc(qty)}</ACTUALQTY>`
+        + `<BILLEDQTY>${esc(qty)}</BILLEDQTY>`
+        + `<AMOUNT>${signed}</AMOUNT>`
+        + '</BATCHALLOCATIONS.LIST>'
+      : '')
+    + `</${tag}>`
+  );
+}
+
+/**
+ * Build the Import request for a stock journal: transfers between godowns,
+ * manufacturing (components consumed, finished goods produced), job work and
+ * stock adjustments.
+ *
+ * Tally keeps the two sides in separate lists — INVENTORYENTRIESOUT for what
+ * is consumed or leaves a godown, INVENTORYENTRIESIN for what is produced or
+ * arrives — under the Consumption voucher view.
+ */
+export function buildStockJournalXml(payload, { company, remoteId }) {
+  if (!company) throw new TallyError(TallyErrorCode.INVALID_ARGUMENT, 'company is required to build a stock journal import.');
+  const consumption = payload.consumption ?? [];
+  const production = payload.production ?? [];
+  if (consumption.length + production.length === 0) {
+    throw new TallyError(TallyErrorCode.INVALID_ARGUMENT, 'a stock journal needs at least one line.');
+  }
+
+  const voucherType = payload.voucherType ?? 'Stock Journal';
+  const date = toTallyDate(payload.date);
+  const body = [
+    `<DATE>${date}</DATE>`,
+    `<EFFECTIVEDATE>${date}</EFFECTIVEDATE>`,
+    `<VOUCHERTYPENAME>${esc(voucherType)}</VOUCHERTYPENAME>`,
+    payload.referenceNumber ? `<REFERENCE>${esc(payload.referenceNumber)}</REFERENCE>` : '',
+    payload.narration ? `<NARRATION>${esc(payload.narration)}</NARRATION>` : '',
+    '<PERSISTEDVIEW>Consumption Voucher View</PERSISTEDVIEW>',
+    '<IScancelled>No</IScancelled>',
+    '<ISOPTIONAL>No</ISOPTIONAL>',
+    consumption.map((l) => stockJournalLineXml(l, { inward: false })).join(''),
+    production.map((l) => stockJournalLineXml(l, { inward: true })).join(''),
+  ].join('');
+
+  const message =
+    `<VOUCHER VCHTYPE="${esc(voucherType)}" ACTION="Create" OBJVIEW="Consumption Voucher View"`
+    + `${remoteId ? ` REMOTEID="${esc(remoteId)}"` : ''}>`
+    + body
+    + '</VOUCHER>';
+  return envelope('Vouchers', company, message);
+}
+
+/** Which way stock moves on each non-invoice inventory document. */
+export const INVENTORY_DOCUMENT_DIRECTION = Object.freeze({
+  'Purchase Order': 'inward',
+  'Receipt Note': 'inward',
+  'Rejections In': 'inward',
+  'Sales Order': 'outward',
+  'Delivery Note': 'outward',
+  'Rejections Out': 'outward',
+});
+
+/**
+ * Build the Import request for an order, a delivery or receipt note, or a
+ * rejection.
+ *
+ * The line structure is the invoice's — stock lines with their own accounting
+ * allocation, party and taxes as ledger lines — but ISINVOICE is No: an order
+ * commits to a sale without making one, and a note moves stock ahead of the
+ * bill. Orders carry their due date on each line, which is where Tally's
+ * order-outstanding reports look for it.
+ */
+export function buildInventoryDocumentXml(payload, { company, remoteId }) {
+  if (!company) throw new TallyError(TallyErrorCode.INVALID_ARGUMENT, 'company is required to build a voucher import.');
+  const direction = INVENTORY_DOCUMENT_DIRECTION[payload.voucherType];
+  if (!direction) {
+    throw new TallyError(TallyErrorCode.INVALID_ARGUMENT, `"${payload.voucherType}" is not an order, note or rejection type.`);
+  }
+  if (!payload.items?.length) {
+    throw new TallyError(TallyErrorCode.INVALID_ARGUMENT, 'a stock document needs at least one stock line.');
+  }
+
+  const isInward = direction === 'inward';
+  const date = toTallyDate(payload.date);
+  const isOrder = /order$/i.test(payload.voucherType);
+  const dueDate = isOrder && payload.dueDate ? toTallyDate(payload.dueDate) : null;
+
+  const stock = payload.items
+    .map((item) => {
+      const xml = inventoryEntryXml(item, { isInward, account: payload.account });
+      if (!dueDate && !(isOrder && payload.referenceNumber)) return xml;
+      // Order details sit inside the line, ahead of its accounting allocation.
+      const orderXml = (dueDate ? `<ORDERDUEDATE P="${dueDate}">${dueDate}</ORDERDUEDATE>` : '')
+        + (isOrder && payload.referenceNumber ? `<ORDERNO>${esc(payload.referenceNumber)}</ORDERNO>` : '');
+      return xml.replace('<ACCOUNTINGALLOCATIONS.LIST>', `${orderXml}<ACCOUNTINGALLOCATIONS.LIST>`);
+    })
+    .join('');
+
+  const party = invoiceLedgerXml(
+    { ledger: payload.party, type: isInward ? 'credit' : 'debit', amount: payload.total },
+    { isParty: true },
+  );
+  const taxes = (payload.taxes ?? []).map((t) => invoiceLedgerXml(t)).join('');
+
+  const body = [
+    `<DATE>${date}</DATE>`,
+    `<EFFECTIVEDATE>${date}</EFFECTIVEDATE>`,
+    `<VOUCHERTYPENAME>${esc(payload.voucherType)}</VOUCHERTYPENAME>`,
+    `<PARTYLEDGERNAME>${esc(payload.party)}</PARTYLEDGERNAME>`,
+    `<PARTYNAME>${esc(payload.party)}</PARTYNAME>`,
+    payload.referenceNumber ? `<REFERENCE>${esc(payload.referenceNumber)}</REFERENCE>` : '',
+    payload.narration ? `<NARRATION>${esc(payload.narration)}</NARRATION>` : '',
+    '<ISINVOICE>No</ISINVOICE>',
+    '<PERSISTEDVIEW>Invoice Voucher View</PERSISTEDVIEW>',
+    '<IScancelled>No</IScancelled>',
+    '<ISOPTIONAL>No</ISOPTIONAL>',
+    party,
+    taxes,
+    stock,
+  ].join('');
+
+  const message =
+    `<VOUCHER VCHTYPE="${esc(payload.voucherType)}" ACTION="Create" OBJVIEW="Invoice Voucher View"`
+    + `${remoteId ? ` REMOTEID="${esc(remoteId)}"` : ''}>`
+    + body
+    + '</VOUCHER>';
+  return envelope('Vouchers', company, message);
+}
+
+export { ledgerEntryXml, inventoryEntryXml, invoiceLedgerXml, stockJournalLineXml, openingStockXml };

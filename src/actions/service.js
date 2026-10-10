@@ -4,7 +4,10 @@ import { TallyError, TallyErrorCode } from '../tally/errors.js';
 import {
   buildLedgerXml, buildVoucherXml, buildUnitXml, buildStockItemXml,
   buildInventoryVoucherXml, parseImportResponse,
+  buildGodownXml, buildStockGroupXml, buildStockJournalXml, buildInventoryDocumentXml,
+  INVENTORY_DOCUMENT_DIRECTION,
 } from '../tally/writes.js';
+import { PeriodLock } from '../ops/periodLock.js';
 import { round2 } from '../tally/normalize.js';
 import { sumMoney, moneyWithin } from '../core/decimal.js';
 import { parseXml } from '../tally/xml.js';
@@ -22,6 +25,7 @@ import {
   validateStockItemsExist, validateUnits, validateGodowns,
   validateBillAllocations, validateBillReferencesExist,
   validateCostAllocations, validateCostCentresExist,
+  validateVoucherTypeInCompany, validateStockJournal, validatePeriodOpen, validateCreditLimit,
 } from '../validation/rules.js';
 
 /**
@@ -38,6 +42,7 @@ export class ActionService {
     client = null,
     company = config.TALLY_COMPANY,
     stagingReader = null,
+    periodLock = new PeriodLock(),
   } = {}) {
     this.store = store;
     this.reader = reader;
@@ -53,6 +58,9 @@ export class ActionService {
      * NOT use it — see #execute.
      */
     this.stagingReader = stagingReader ?? new CachedReader(this.reader);
+
+    /** The agent's own closed-period lock; see src/ops/periodLock.js. */
+    this.periodLock = periodLock;
   }
 
   /**
@@ -95,6 +103,26 @@ export class ActionService {
   /** stage_inventory_invoice — an invoice that moves stock, not just money. */
   async stageInventoryInvoice(input) {
     return this.#stage(ACTION_KINDS.INVENTORY_INVOICE, input);
+  }
+
+  /** stage_godown_creation — a stock location. */
+  async stageGodownCreation(input) {
+    return this.#stage(ACTION_KINDS.GODOWN_CREATION, input);
+  }
+
+  /** stage_stock_group_creation */
+  async stageStockGroupCreation(input) {
+    return this.#stage(ACTION_KINDS.STOCK_GROUP_CREATION, input);
+  }
+
+  /** stage_stock_journal — transfers, manufacturing, job work, adjustments. */
+  async stageStockJournal(input) {
+    return this.#stage(ACTION_KINDS.STOCK_JOURNAL, input);
+  }
+
+  /** stage_inventory_order — orders, delivery and receipt notes, rejections. */
+  async stageInventoryDocument(input) {
+    return this.#stage(ACTION_KINDS.INVENTORY_DOCUMENT, input);
   }
 
   /**
@@ -277,6 +305,12 @@ export class ActionService {
       throw err;
     }
 
+    // A closed period is closed to every dated entry, checked at staging and
+    // again at approval (this method runs both times).
+    if (payload.date) {
+      validatePeriodOpen(payload.date, await this.periodLock.read(), findings);
+    }
+
     if (kind === ACTION_KINDS.LEDGER_CREATION) {
       const [groups, ledgers] = await Promise.all([
         reader.listGroups({ limit: 1000 }),
@@ -317,7 +351,79 @@ export class ActionService {
         validateNotDuplicate(payload, existing.items, findings);
       }
 
+      if (payload.voucherType === 'Sales' && payload.party) {
+        const partyLine = payload.entries.find((e) => e.ledger.toLowerCase() === payload.party.toLowerCase() && e.type === 'debit');
+        if (partyLine) {
+          const ledger = ledgers.items.find((l) => l.name.toLowerCase() === payload.party.toLowerCase());
+          validateCreditLimit({ party: payload.party, amount: partyLine.amount }, ledger, findings);
+        }
+      }
+
       await this.#validateAllocations(payload.entries, reader, findings);
+      return findings;
+    }
+
+    if (kind === ACTION_KINDS.GODOWN_CREATION) {
+      const godowns = await reader.listGodowns({ limit: 1000 });
+      if (godowns.items.some((g) => g.name.toLowerCase() === payload.name.toLowerCase())) {
+        findings.error('GODOWN_EXISTS', `A godown named "${payload.name}" already exists.`, { godown: payload.name });
+      }
+      if (payload.parent && !godowns.items.some((g) => g.name.toLowerCase() === payload.parent.toLowerCase())) {
+        findings.error('GODOWN_NOT_FOUND', `Parent godown "${payload.parent}" does not exist.`, { godown: payload.parent });
+      }
+      return findings;
+    }
+
+    if (kind === ACTION_KINDS.STOCK_GROUP_CREATION) {
+      const groups = await reader.listStockGroups({ limit: 1000 });
+      if (groups.items.some((g) => g.name.toLowerCase() === payload.name.toLowerCase())) {
+        findings.error('STOCK_GROUP_EXISTS', `A stock group named "${payload.name}" already exists.`, { stockGroup: payload.name });
+      }
+      if (payload.parent && !groups.items.some((g) => g.name.toLowerCase() === payload.parent.toLowerCase())) {
+        findings.error('STOCK_GROUP_NOT_FOUND', `Parent stock group "${payload.parent}" does not exist.`, { stockGroup: payload.parent });
+      }
+      return findings;
+    }
+
+    if (kind === ACTION_KINDS.STOCK_JOURNAL) {
+      const [voucherTypes, stockItems, godowns] = await Promise.all([
+        reader.listVoucherTypes({ limit: 1000 }),
+        reader.listStockItems({ limit: 1000 }),
+        reader.listGodowns({ limit: 1000 }),
+      ]);
+      const lines = [...payload.consumption, ...payload.production];
+      validateDate(payload.date, company, findings);
+      validateVoucherTypeInCompany(payload.voucherType ?? 'Stock Journal', voucherTypes.items, findings, { family: 'Stock Journal' });
+      validateStockJournal(payload, findings);
+      validateStockItemsExist(lines.map((l) => l.stockItem), stockItems.items, findings);
+      validateUnits(lines, stockItems.items, findings);
+      validateGodowns(lines, godowns.items, findings);
+      return findings;
+    }
+
+    if (kind === ACTION_KINDS.INVENTORY_DOCUMENT) {
+      const [ledgers, voucherTypes, stockItems, godowns] = await Promise.all([
+        reader.listLedgers({ limit: 1000 }),
+        reader.listVoucherTypes({ limit: 1000 }),
+        reader.listStockItems({ limit: 1000 }),
+        reader.listGodowns({ limit: 1000 }),
+      ]);
+      validateDate(payload.date, company, findings);
+      validateVoucherTypeInCompany(payload.voucherType, voucherTypes.items, findings);
+      validateInventoryTotals(payload, findings);
+      validateStockItemsExist(payload.items.map((i) => i.stockItem), stockItems.items, findings);
+      validateUnits(payload.items, stockItems.items, findings);
+      validateGodowns(payload.items, godowns.items, findings);
+      validateLedgersExist(
+        [payload.party, payload.account, ...payload.items.map((i) => i.account).filter(Boolean), ...(payload.taxes ?? []).map((t) => t.ledger)],
+        ledgers.items, this.store.pendingLedgerNames(), findings,
+      );
+      if (payload.dueDate && payload.dueDate < payload.date) {
+        findings.error('DUE_BEFORE_ORDER', `The due date ${payload.dueDate} is before the order date ${payload.date}.`);
+      }
+      if (payload.dueDate && !/order$/i.test(payload.voucherType)) {
+        findings.warn('DUE_DATE_IGNORED', `A due date only applies to orders; it will not be recorded on a ${payload.voucherType}.`);
+      }
       return findings;
     }
 
@@ -371,6 +477,11 @@ export class ActionService {
         ...(payload.taxes ?? []).map((t) => t.ledger),
       ];
       validateLedgersExist(named, ledgers.items, this.store.pendingLedgerNames(), findings);
+
+      if (payload.voucherType === 'Sales') {
+        const ledger = ledgers.items.find((l) => l.name.toLowerCase() === payload.party.toLowerCase());
+        validateCreditLimit({ party: payload.party, amount: payload.total }, ledger, findings);
+      }
 
       if (payload.referenceNumber) {
         const range = booksRange(company);
@@ -431,8 +542,10 @@ export class ActionService {
       };
     }
 
-    if (kind === ACTION_KINDS.INVENTORY_INVOICE) {
-      const isPurchase = payload.voucherType === 'Purchase' || payload.voucherType === 'Debit Note';
+    if (kind === ACTION_KINDS.INVENTORY_INVOICE || kind === ACTION_KINDS.INVENTORY_DOCUMENT) {
+      const isPurchase = kind === ACTION_KINDS.INVENTORY_DOCUMENT
+        ? INVENTORY_DOCUMENT_DIRECTION[payload.voucherType] === 'inward'
+        : payload.voucherType === 'Purchase' || payload.voucherType === 'Debit Note';
       const stockTotal = sumMoney(payload.items.map((i) => i.amount));
       const entries = [
         ...(isPurchase
@@ -448,7 +561,10 @@ export class ActionService {
           : [{ ledger: payload.account, debit: '', credit: stockTotal.toFixed(2) }]),
       ];
       return {
-        title: `${payload.voucherType} invoice (with stock) dated ${payload.date}`,
+        title: kind === ACTION_KINDS.INVENTORY_DOCUMENT
+          ? `${payload.voucherType} dated ${payload.date}${payload.referenceNumber ? ` (${payload.referenceNumber})` : ''}`
+          : `${payload.voucherType} invoice (with stock) dated ${payload.date}`,
+        ...(payload.dueDate ? { dueDate: payload.dueDate } : {}),
         company: this.company,
         voucherType: payload.voucherType,
         date: payload.date,
@@ -468,6 +584,52 @@ export class ActionService {
           credit: payload.total.toFixed(2),
           balanced: true,
           stock: stockTotal.toFixed(2),
+        },
+        warnings: findings.warnings.map((w) => w.message),
+        errors: findings.errors.map((e) => e.message),
+      };
+    }
+
+    if (kind === ACTION_KINDS.GODOWN_CREATION || kind === ACTION_KINDS.STOCK_GROUP_CREATION) {
+      const what = kind === ACTION_KINDS.GODOWN_CREATION ? 'godown' : 'stock group';
+      return {
+        title: `Create ${what} "${payload.name}"`,
+        company: this.company,
+        lines: [
+          [what === 'godown' ? 'Godown' : 'Stock group', payload.name],
+          ...(payload.parent ? [['Under', payload.parent]] : []),
+          ...(payload.address ? [['Address', payload.address]] : []),
+        ],
+        warnings: findings.warnings.map((w) => w.message),
+        errors: findings.errors.map((e) => e.message),
+      };
+    }
+
+    if (kind === ACTION_KINDS.STOCK_JOURNAL) {
+      const consumed = sumMoney(payload.consumption.map((l) => l.amount));
+      const produced = sumMoney(payload.production.map((l) => l.amount));
+      const purpose = {
+        transfer: 'Stock transfer', manufacture: 'Manufacturing journal', job_work_out: 'Material sent for job work',
+        job_work_in: 'Material received from job work', adjustment: 'Stock adjustment',
+      }[payload.purpose];
+      const line = (side) => (l) => ({
+        side, stockItem: l.stockItem, quantity: `${l.quantity} ${l.unit}`,
+        rate: l.rate.toFixed(2), amount: l.amount.toFixed(2), godown: l.godown ?? null,
+      });
+      return {
+        title: `${purpose} dated ${payload.date}`,
+        company: this.company,
+        voucherType: payload.voucherType ?? 'Stock Journal',
+        date: payload.date,
+        reference: payload.referenceNumber ?? null,
+        narration: payload.narration ?? null,
+        inventory: [...payload.consumption.map(line('out')), ...payload.production.map(line('in'))],
+        entries: [],
+        // No ledger moves. The value consumed stands in for "amount" so the
+        // dashboard and approval limits have something to measure.
+        totals: {
+          debit: consumed.toFixed(2), credit: produced.toFixed(2), balanced: true,
+          consumed: consumed.toFixed(2), produced: produced.toFixed(2),
         },
         warnings: findings.warnings.map((w) => w.message),
         errors: findings.errors.map((e) => e.message),
@@ -567,6 +729,10 @@ export class ActionService {
         [ACTION_KINDS.STOCK_ITEM_CREATION]: buildStockItemXml,
         [ACTION_KINDS.INVENTORY_INVOICE]: buildInventoryVoucherXml,
         [ACTION_KINDS.ACCOUNTING_VOUCHER]: buildVoucherXml,
+        [ACTION_KINDS.GODOWN_CREATION]: buildGodownXml,
+        [ACTION_KINDS.STOCK_GROUP_CREATION]: buildStockGroupXml,
+        [ACTION_KINDS.STOCK_JOURNAL]: buildStockJournalXml,
+        [ACTION_KINDS.INVENTORY_DOCUMENT]: buildInventoryDocumentXml,
       };
       const build = builders[action.kind];
       if (!build) throw new Error(`No XML builder for action kind "${action.kind}".`);
@@ -733,15 +899,44 @@ export class ActionService {
           : { verified: false, at, method: 'stock-item-read-back', reason: `Stock item "${action.payload.name}" could not be read back.` };
       }
 
-      if (action.kind === ACTION_KINDS.INVENTORY_INVOICE) {
-        const p = action.payload;
+      if (action.kind === ACTION_KINDS.GODOWN_CREATION || action.kind === ACTION_KINDS.STOCK_GROUP_CREATION) {
+        const isGodown = action.kind === ACTION_KINDS.GODOWN_CREATION;
+        const list = isGodown
+          ? await this.reader.listGodowns({ limit: 1000 })
+          : await this.reader.listStockGroups({ limit: 1000 });
+        const hit = list.items.find((g) => g.name.toLowerCase() === action.payload.name.toLowerCase());
+        const method = isGodown ? 'godown-read-back' : 'stock-group-read-back';
+        return hit
+          ? { verified: true, at, method, master: hit }
+          : { verified: false, at, method, reason: `"${action.payload.name}" could not be read back from Tally.` };
+      }
+
+      if (action.kind === ACTION_KINDS.INVENTORY_INVOICE
+        || action.kind === ACTION_KINDS.INVENTORY_DOCUMENT
+        || action.kind === ACTION_KINDS.STOCK_JOURNAL) {
+        const p = action.kind === ACTION_KINDS.STOCK_JOURNAL
+          ? { ...action.payload, voucherType: action.payload.voucherType ?? 'Stock Journal', items: [...action.payload.consumption, ...action.payload.production] }
+          : action.payload;
         const found = await this.reader.findVouchers({ from: p.date, to: p.date, voucherType: p.voucherType, limit: 1000 });
-        const match = found.items.find((v) => {
+        const wantedItems = [...new Set(p.items.map((i) => i.stockItem.toLowerCase()))].sort().join('|');
+        const candidates = found.items.filter((v) => {
           if (importResult.lastVoucherId && String(v.masterId) === String(importResult.lastVoucherId)) return true;
-          return p.referenceNumber && (v.reference ?? '').trim() === p.referenceNumber.trim();
+          if (p.referenceNumber) return (v.reference ?? '').trim() === p.referenceNumber.trim();
+          // A stock journal often carries no reference. Fall back to the
+          // same day, type and set of items — but only if that picks out
+          // exactly one voucher, or we could confirm someone else's entry.
+          return [...new Set((v.inventory ?? []).map((i) => i.stockItem.toLowerCase()))].sort().join('|') === wantedItems;
         });
+        const byId = candidates.find((v) => importResult.lastVoucherId && String(v.masterId) === String(importResult.lastVoucherId));
+        const match = byId ?? (candidates.length === 1 ? candidates[0] : null);
+        if (!byId && candidates.length > 1) {
+          return {
+            verified: false, at, method: 'inventory-read-back',
+            reason: `${candidates.length} vouchers on ${p.date} fit this entry and Tally did not say which one it created; check in Tally.`,
+          };
+        }
         if (!match) {
-          return { verified: false, at, method: 'inventory-read-back', reason: `Tally reported creating the invoice, but no matching voucher could be read back for ${p.date}.` };
+          return { verified: false, at, method: 'inventory-read-back', reason: `Tally reported creating the ${p.voucherType}, but no matching voucher could be read back for ${p.date}.` };
         }
         if (!match.totals.balanced) {
           return { verified: false, at, method: 'inventory-read-back', reason: 'The voucher was found in Tally but does not balance.', voucher: match };

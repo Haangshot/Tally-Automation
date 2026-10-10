@@ -129,6 +129,7 @@ export class TallyReader {
       fetchFields: [
         'Name', 'Parent', 'OpeningBalance', 'ClosingBalance',
         'LedgerPhone', 'PartyGSTIN', 'IsBillWiseOn', 'MasterID',
+        'Email', 'LedStateName', 'PinCode', 'Address', 'CreditLimit',
       ],
     });
     let items = rows.map(normalizeLedger);
@@ -201,6 +202,20 @@ export class TallyReader {
     return truncate(items, limit);
   }
 
+  /** Stock groups — the inventory equivalent of account groups. */
+  async listStockGroups({ search = '', limit = DEFAULT_LIMIT } = {}) {
+    const rows = await this.client.collection({
+      name: 'AgentStockGroups',
+      type: 'Stock Group',
+      company: this.company,
+      fetchFields: ['Name', 'Parent'],
+    });
+    let items = rows.map(normalizeGodown);
+    if (search) items = items.filter((g) => g.name.toLowerCase().includes(search.toLowerCase()));
+    items.sort((a, b) => a.name.localeCompare(b.name));
+    return truncate(items, limit);
+  }
+
   /** list_voucher_types */
   async listVoucherTypes({ search = '', limit = DEFAULT_LIMIT } = {}) {
     const rows = await this.client.collection({
@@ -243,6 +258,7 @@ export class TallyReader {
         'Date', 'VoucherTypeName', 'VoucherNumber', 'PartyLedgerName', 'Reference',
         'Narration', 'MasterID', 'IsCancelled', 'IsOptional',
         'AllLedgerEntries', 'LedgerEntries', 'AllInventoryEntries', 'IsInvoice',
+        'InventoryEntriesIn', 'InventoryEntriesOut',
       ],
     });
 
